@@ -62,7 +62,7 @@ for key, files in file_groups.items():
         
         dataframes.append(df_flags_attached)
 
-        break
+        
 
     
     # Concatenate dataframes
@@ -89,7 +89,7 @@ stacked_dataframes.info()
 file_name = "Gauss_Processed_data"
 saving_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Gaussian_Data_processed"
 
-stacked_dataframes.to_csv(f"{saving_path}\{file_name}.csv")
+#stacked_dataframes.to_csv(f"{saving_path}\{file_name}.csv")
 
 # %%
 stacked_dataframes.to_pickle(f"{saving_path}\{file_name}.pkl")
