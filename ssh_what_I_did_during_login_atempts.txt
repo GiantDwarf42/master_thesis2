@@ -1,0 +1,21 @@
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+The authenticity of host 'login2.baobab.hpc.unige.ch (129.194.9.190)' can't be established.
+RSA key fingerprint is SHA256:tKqp4nljL+EGVKl8T0VF2nS36DkHVFMpLxQOPg/gKvg.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? y
+Please type 'yes', 'no' or the fingerprint: yes
+Warning: Permanently added 'login2.baobab.hpc.unige.ch' (RSA) to the list of known hosts.
+(nickk@login2.baobab.hpc.unige.ch) Password:
+Connection closed by 129.194.9.190 port 22
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+(nickk@login2.baobab.hpc.unige.ch) Password:
+Connection closed by 129.194.9.190 port 22
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+ssh: connect to host login2.baobab.hpc.unige.ch port 22: Connection timed out
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+ssh: connect to host login2.baobab.hpc.unige.ch port 22: Connection timed out
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+ssh: connect to host login2.baobab.hpc.unige.ch port 22: Connection timed out
+(base) PS C:\WINDOWS\system32> ssh login2.baobab.hpc.unige.ch
+ssh: connect to host login2.baobab.hpc.unige.ch port 22: Connection timed out
+(base) PS C:\WINDOWS\system32>
