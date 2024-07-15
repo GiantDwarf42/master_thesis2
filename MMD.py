@@ -29,7 +29,7 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
         n (int): the number of rows the simulation distribution should
         case (str): the distribution for which to calculate b for cases: "norm", "logistic"
         device (_type_): the pytorch device object
-        params (dict): a correctly named dictionary with the required parameters for the b calculation if "norm" => mu, sigm if "logistic" alpha
+        params (dict): a correctly named dictionary with the required parameters for the b calculation if "norm" => mu, sigma if "logistic" alpha
     Returns:
         torch.tensor: returns the bandwidth value as a 1x1 tensor
     """
@@ -38,10 +38,10 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
     #case distinction
     if case == "norm":
         
-        #this is a safety thing, during optimization it can incidentially happend
+        #this is a safety thing, during optimization it can incidentially happen
         # that sigma_hat becomes negative. It is very rare but it does.
         if params["sigma"] <= 0:
-            params["sigma"] = 1
+            params["sigma"] = 1.0
         
         x = torch.normal(params["mu"], params["sigma"],(n,y.shape[1]))
         b = 1/ torch.median(torch.cdist(x,y,p=2)**2)

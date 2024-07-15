@@ -11,7 +11,6 @@ def main(task_id):
     import numpy as np
     from datetime import datetime
     import pandas as pd
-    import matplotlib.pyplot as plt
     from scipy.stats import norm
 
     #self written modules
@@ -32,7 +31,7 @@ def main(task_id):
     #%%
 
     #%%
-    folder_name= "Gaussian_Test"
+    folder_name= "Gaussian_Result"
     lr = 0.1
 
 
@@ -92,11 +91,8 @@ def main(task_id):
                         
                             
 
-                            if b_value == "heuristic":
 
-                                file_name = f"mu{mu}_sigma{sigma}_xsize{x_sample_size}_ysize{y_sample_size}_bheuristic"
-
-                            elif b_value == "AUTO":
+                            if b_value == "AUTO":
                                 file_name = f"mu{mu}_sigma{sigma}_xsize{x_sample_size}_ysize{y_sample_size}_bAUTO"
 
                             else:
@@ -108,7 +104,7 @@ def main(task_id):
                             y = torch.normal(mu,sigma,(y_sample_size,1))
 
                             # check if b heuristic needs to be calculated
-                            if b_value == "heuristic" or b_value == "AUTO":
+                            if b_value == "AUTO":
 
                                 # starting point for bandwidth 
                                 b_params = {"mu": 0,
@@ -141,15 +137,11 @@ def main(task_id):
 
                             #get MLE
                             mu_hat_MLE, std_hat_MLE = norm.fit(y)
-                            #get Method of Moments Estimators
-                            mu_hat_MM = y.mean()
-                            std_hat_MM = y.std()
+                            
 
                             #safe MLE and MM estimators
                             estimators = pd.DataFrame({"mu_hat_MLE": np.repeat(mu_hat_MLE, nr_iterations),
-                                                    "sigma_hat_MLE": np.repeat(std_hat_MLE, nr_iterations),
-                                                    "mu_hat_MM": np.repeat(mu_hat_MM, nr_iterations),
-                                                    "sigma_hat_MM": np.repeat(std_hat_MM, nr_iterations)})
+                                                    "sigma_hat_MLE": np.repeat(std_hat_MLE, nr_iterations)})
 
                             
                             # run the actual simulation
