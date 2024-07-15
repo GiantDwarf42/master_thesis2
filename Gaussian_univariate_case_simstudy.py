@@ -50,7 +50,7 @@ def main(task_id):
     b_list = ["AUTO", 0.01, 0.1]
 
     # number number iterations
-    nr_iterations = 1500
+    nr_iterations = 2000
 
     
     # # #sample sizes
