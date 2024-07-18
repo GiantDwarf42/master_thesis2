@@ -41,7 +41,7 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
         #this is a safety thing, during optimization it can incidentially happen
         # that sigma_hat becomes negative. It is very rare but it does.
         if params["sigma"] <= 0:
-            params["sigma"] = 1.0
+            params["sigma"] = 0.01
         
         x = torch.normal(params["mu"], params["sigma"],(n,y.shape[1]))
         b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
@@ -50,7 +50,9 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
             
             #safety thing as above, might not be needed
             if params["alpha"] <= 0:
-                params["alpha"] = 0.5
+                params["alpha"] = 0.01
+            elif params["alpha"] >= 1:
+                params["alpha"] = 0.99
 
             x = sample_multivariate_logistic(n,y.shape[1], params["alpha"], device)
             b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
