@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # %%
-number_iterations = 1500
+number_iterations = 2500
 
-load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Gaussian_Data_processed\Gauss_Processed_data.pkl"
+load_path = r"/home/users/k/kipfer2/Gauss_processed_results/Data/Gauss_Processed_data.pkl"
 
 #loading the data
 # df = pd.read_csv(load_path) # takes way longer and loads from csv source
@@ -99,19 +99,19 @@ df_last_150_proper_aggregation_index_reset
 # # Tables aggregated over the 150 simulations split by b values
 
 # %%
-saving_path_result_data = f"sdjfhj2ehgf"
+saving_path_result_data = f"/home/users/k/kipfer2/Gauss_processed_results/processed_tables"
 
 # %%
 data_output = df_last_150_proper_aggregation_index_reset[df_last_150_proper_aggregation_index_reset["b"]=="b0.1"].set_index(["mu", "sigma", "b", 'simulation sample size', 'target sample size'])
-data_output.to_csv(f"{saving_path_result_data}/Gaussian_result_b0.1.csv")
+data_output.to_pickle(f"{saving_path_result_data}/Gaussian_result_b0.1.pkl")
 
 # %%
 data_output = df_last_150_proper_aggregation_index_reset[df_last_150_proper_aggregation_index_reset["b"]=="b0.01"].set_index(["mu", "sigma", "b", 'simulation sample size', 'target sample size'])
-data_output.to_csv(f"{saving_path_result_data}/Gaussian_result_b0.01.csv")
+data_output.to_pickle(f"{saving_path_result_data}/Gaussian_result_b0.01.pkl")
 
 # %%
 data_output = df_last_150_proper_aggregation_index_reset[df_last_150_proper_aggregation_index_reset["b"]=="bAUTO"].set_index(["mu", "sigma", "b", 'simulation sample size', 'target sample size'])
-data_output.to_csv(f"{saving_path_result_data}/Gaussian_result_bAUTO.csv")
+data_output.to_pickle(f"{saving_path_result_data}/Gaussian_result_bAUTO.pkl")
 
 # %%
 
@@ -135,7 +135,7 @@ param_combinations = df.groupby(["mu", "sigma", "b", "xsize", "ysize"]).groups.k
 param_combinations
 
 # %%
-saving_path_convergence = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Gaussian_Convergence_charts"
+saving_path_convergence = r"/home/users/k/kipfer2/Gauss_processed_results/convergence_charts"
 
 # %%
 import seaborn as sns
@@ -179,10 +179,9 @@ for mu, sigma, b, xsize, ysize in param_combinations:
     plt.close()
 
     counter += 1
-    if counter == 1:
-	
-    	break
-
+    print(f"created and saved {counter} figures")
+   
+   
 
 # %%
 
@@ -191,7 +190,7 @@ for mu, sigma, b, xsize, ysize in param_combinations:
 # # Violin chart for sample sizes
 
 # %%
-saving_path_sample_size_effect = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Gaussian_Violin_sample_size_effect"
+saving_path_sample_size_effect = r"/home/users/k/kipfer2/Gauss_processed_results/violin_charts"
 
 # %%
 # getting the individual parameter combination sub dataframes 
@@ -270,17 +269,14 @@ for mu, sigma, b in param_combinations:
 
 	file_name = f"mu{mu}_sigma{sigma}_{b}_yeffect"
 
-	#plt.savefig(f"{saving_path_sample_size_effect}\{file_name}.png")
+	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
 
-	plt.show()
 	plt.close()
 
 	counter += 1
 
 	print(f"created and saved {counter} figures")
 
-	if counter == 1:
-		break
 	
 
 	
@@ -351,17 +347,15 @@ for mu, sigma, b in param_combinations:
 
 	file_name = f"mu{mu}_sigma{sigma}_{b}_xeffect"
 
-	#plt.savefig(f"{saving_path_sample_size_effect}\{file_name}.png")
+	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
 
-	plt.show()
 	plt.close()
 
 	counter += 1
 
 	print(f"created and saved {counter} figures")
 
-	if counter == 1:
-		break
+	
 	
 
 	
