@@ -31,7 +31,7 @@ def main(task_id):
     #%%
 
     #%%
-    folder_name= "Gaussian_Result"
+    folder_name= "Gaussian_Result_2500it_200rep"
     lr = 0.1
 
 
@@ -50,7 +50,7 @@ def main(task_id):
     b_list = ["AUTO", 0.01, 0.1]
 
     # number number iterations
-    nr_iterations = 2000
+    nr_iterations = 2500
 
     
     # # #sample sizes
