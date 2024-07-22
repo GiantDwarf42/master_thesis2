@@ -312,15 +312,7 @@ def MMD_equal_case(x:torch.tensor,device,b:float=1):
 
 def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tensor:
 
-    # Step 0:
-    # during optimization alpha can fall out of the domain. Here it is forced back inside the domain
-
-    if isinstance(alpha, torch.Tensor):
-
-        if alpha[0] <= 0:
-            alpha[0] = 0.01
-        elif alpha[0] >= 1:
-            alpha[0] = 0.99
+    
         
     # Step 1: 
     # simulate from a positive stable distribution
@@ -330,6 +322,8 @@ def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tenso
     # sample random standard exponential variables independent of S
     W = torch.zeros([n,m]).exponential_(lambd=1).to(device)
     X = (S/W)**alpha
+
+    # check for inf and check for inf and neginf, also if 0 is an issue
 
     return X
 
