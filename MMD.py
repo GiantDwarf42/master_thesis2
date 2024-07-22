@@ -202,6 +202,15 @@ def training_loop_multi_logist(alpha_hat, target_dist, nr_iterations , sample_si
         # Take one SGD step
         optimizer.step()
 
+
+        # this is supposed to ensure that alpha_hat stays in the domain after optimization
+        with torch.no_grad():  # Temporarily disable gradient tracking
+            if alpha_hat <= 0:
+                alpha_hat.copy_(torch.tensor(0.01))
+            elif alpha_hat >= 1:
+                alpha_hat.copy_(torch.tensor(0.99))
+
+
         alpha_hat_estimates.append(alpha_hat.detach().clone())
         MMD_values.append(loss.detach().clone())
         b_values.append(b)
@@ -270,12 +279,24 @@ def MMD_equal_case(x:torch.tensor,device,b:float=1):
     """
 
     n = x.shape[0]
+
+    if x.isnan().any():
+
+        print(x)
     
     cdist = torch.cdist(x,x,p=2).to(device)
+
+    if cdist.isnan().any():
+
+        print(cdist)
     
     
     #calculate kernel values
     kernel_values = kernel_gauss_cdist(cdist,b)
+
+    if kernel_values.isnan().any():
+
+        print(kernel_values)
     
     #get the diagonal
     diag_kernel_values = kernel_values.diagonal()
@@ -291,6 +312,16 @@ def MMD_equal_case(x:torch.tensor,device,b:float=1):
 
 def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tensor:
 
+    # Step 0:
+    # during optimization alpha can fall out of the domain. Here it is forced back inside the domain
+
+    if isinstance(alpha, torch.Tensor):
+
+        if alpha[0] <= 0:
+            alpha[0] = 0.01
+        elif alpha[0] >= 1:
+            alpha[0] = 0.99
+        
     # Step 1: 
     # simulate from a positive stable distribution
     S = sample_PS(n, m, alpha, device)
