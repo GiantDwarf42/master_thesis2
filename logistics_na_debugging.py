@@ -16,6 +16,7 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+from scipy.stats import genextreme
 
 #self written modules
 import MMD
@@ -122,9 +123,34 @@ for b_value in b_list:
 simulated_df
 
 # %%
+#%%
+#%%
+loc = 1
+scale = 1
+c = 50
+
+# %%
+
+samples = genextreme.rvs(c, loc=loc, scale=scale, size=[3,10])
+
+samples_tensor = torch.Tensor(samples)
+# %%
+type(samples)
+#%%
+#%%
+# %%
+#%%
+#%%
+
+# %%
+#%%
+#%%
 
 
 # %%
+#%%
+#%%
+
 
 
 

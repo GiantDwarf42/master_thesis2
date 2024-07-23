@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import pandas as pd
 import time
+from scipy.stats import genextreme
 
 
 def kernel_gauss_cdist(cdist:torch.tensor, b:int=1)->torch.tensor:
@@ -280,23 +281,23 @@ def MMD_equal_case(x:torch.tensor,device,b:float=1):
 
     n = x.shape[0]
 
-    if x.isnan().any():
+    # if x.isnan().any():
 
-        print(x)
+    #     print(x)
     
     cdist = torch.cdist(x,x,p=2).to(device)
 
-    if cdist.isnan().any():
+    # if cdist.isnan().any():
 
-        print(cdist)
+    #     print(cdist)
     
     
     #calculate kernel values
     kernel_values = kernel_gauss_cdist(cdist,b)
 
-    if kernel_values.isnan().any():
+    # if kernel_values.isnan().any():
 
-        print(kernel_values)
+    #     print(kernel_values)
     
     #get the diagonal
     diag_kernel_values = kernel_values.diagonal()
@@ -316,19 +317,44 @@ def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tenso
         
     # Step 1: 
     # simulate from a positive stable distribution
-    S = sample_PS(n, m, alpha, device)
+    #S = sample_PS(n, m, alpha, device)
+
+    # Test samplig alternative
+    S = sample_PS_scipy(n, m, alpha, device)
+
+
+    # Step 1.5:
+    # trying to prevent inf and 0 values
+
+    # Define the max float and tiny value for torch.float64
+    # max_float = np.finfo(np.float64).max / 10000
+    # tiny_float = np.finfo(np.float64).tiny * 10000
+
+    # # Replace inf and -inf with max_float
+    # S = torch.where(torch.isinf(S), torch.tensor(max_float, dtype=torch.float64), S)
+
+    # # Replace 0 with tiny_float
+    # S = torch.where(S == 0.0, torch.tensor(tiny_float, dtype=torch.float64), S)
+
 
     # Step 2:
     # sample random standard exponential variables independent of S
     W = torch.zeros([n,m]).exponential_(lambd=1).to(device)
     X = (S/W)**alpha
 
+
+
+    # Replace inf and -inf with max_float
+    #X = torch.where(torch.isinf(X), torch.tensor(max_float, dtype=torch.float64), X)
+
+    # Replace 0 with tiny_float
+    #X = torch.where(X == 0.0, torch.tensor(tiny_float, dtype=torch.float64), X)
     # check for inf and check for inf and neginf, also if 0 is an issue
 
     return X
 
 
-def sample_PS(n:int, m:int, alpha:float, device)-> torch.tensor:
+def sample_PS(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
 
     # REMEMBER: unclear if S is rowwise identical. 
     # I assume so because of lack of index
@@ -343,9 +369,54 @@ def sample_PS(n:int, m:int, alpha:float, device)-> torch.tensor:
 
     comp2 = torch.sin(alpha*U)/(torch.sin(U)**(1-alpha))
 
-    S = comp1**exponent * comp2
+    S_part_0 = comp1**exponent
+    
+    S =  S_part_0 * comp2
 
     S = S.repeat(1,m)
 
     return S
 
+
+def sample_PS_scipy(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
+
+    # get uniform distribution
+    U = torch.zeros([n,1]).uniform_(0,torch.pi).to(device)
+    
+    # get the exponent or c value (evi)
+    exponent = (1-alpha)/alpha
+
+    # location and scale provided by Flo
+    loc = 1
+    scale = 1
+    
+    print(type(exponent))
+
+    if isinstance(exponent, torch.Tensor):
+
+        exponent_value = exponent.detach().numpy()
+
+    else:
+        exponent_value = exponent
+
+    # sample from Frèchet distribution
+
+    if exponent_value <= 0:
+        exponent_value = 0.01
+    F = genextreme.rvs(exponent_value, loc=loc, scale=scale, size=[n,1])
+
+    # make torch tensor
+    F_tensor = torch.Tensor(F).to(device)
+
+
+    A = torch.sin((1-alpha)*U)
+
+    comp1 = A**exponent * F_tensor
+
+    comp2 = torch.sin(alpha*U)/(torch.sin(U)**(1-alpha))
+    
+    S =  comp1 * comp2
+
+    S = S.repeat(1,m)
+
+    return S
