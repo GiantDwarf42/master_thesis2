@@ -35,7 +35,7 @@ np.random.seed(seed)
 
 
 # %%
-lr = 0.1
+lr = 0.01
 
 
 #######################################################################################################################3
@@ -46,7 +46,7 @@ x_sample_sizes = [50]
 y_sample_sizes = [50]
 
 # true parameters
-alpha_list = [0.05]
+alpha_list = [0.1]
 
 #dims
 dim_list = [2]
@@ -55,13 +55,13 @@ dim_list = [2]
 b_list = [0.01]
 
 # number number iterations
-nr_iterations = 800
+nr_iterations = 2500
 
 
 
 
 #going through parameter permutation
-
+simulated_df_list = []
 for b_value in b_list:
 
 	for alpha in alpha_list:
@@ -115,31 +115,26 @@ for b_value in b_list:
 						# run the actual simulation
 						simulated_df = MMD.training_loop_multi_logist(alpha_hat, y, nr_iterations, x_sample_size, device, b, optimizer, epoch_print_size=False,b_update=b_update)
 
-			
+						simulated_df_list.append(simulated_df)
 
 			
 
+			
 # %%
-simulated_df
+simulated_df_list[0]
+
 
 # %%
+plt.plot(simulated_df_list[0].alpha_hat)
 #%%
-#%%
-loc = 1
-scale = 1
-c = 50
+plt.plot(simulated_df_list[1].alpha_hat)
 
-# %%
 
-samples = genextreme.rvs(c, loc=loc, scale=scale, size=[3,10])
-
-samples_tensor = torch.Tensor(samples)
-# %%
-type(samples)
 #%%
-#%%
+plt.plot(simulated_df_list[2].alpha_hat)
 # %%
 #%%
+11500*12
 #%%
 
 # %%

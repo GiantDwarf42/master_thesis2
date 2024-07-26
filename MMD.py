@@ -317,23 +317,23 @@ def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tenso
         
     # Step 1: 
     # simulate from a positive stable distribution
-    #S = sample_PS(n, m, alpha, device)
+    S = sample_PS(n, m, alpha, device)
 
     # Test samplig alternative
-    S = sample_PS_scipy(n, m, alpha, device)
+    #S = sample_PS_scipy(n, m, alpha, device)
 
 
-    # Step 1.5:
-    # trying to prevent inf and 0 values
+    # # Step 1.5:
+    # # trying to prevent inf and 0 values
 
-    # Define the max float and tiny value for torch.float64
+    # # Define the max float and tiny value for torch.float64
     # max_float = np.finfo(np.float64).max / 10000
     # tiny_float = np.finfo(np.float64).tiny * 10000
 
-    # # Replace inf and -inf with max_float
+    # # # Replace inf and -inf with max_float
     # S = torch.where(torch.isinf(S), torch.tensor(max_float, dtype=torch.float64), S)
 
-    # # Replace 0 with tiny_float
+    # # # Replace 0 with tiny_float
     # S = torch.where(S == 0.0, torch.tensor(tiny_float, dtype=torch.float64), S)
 
 
@@ -372,6 +372,23 @@ def sample_PS(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
     S_part_0 = comp1**exponent
     
     S =  S_part_0 * comp2
+
+    # trying to prevent inf and 0 values
+
+    # Define the max float and tiny value for torch.float64
+    max_float = np.finfo(np.float64).max / 10000000
+    tiny_float = np.finfo(np.float64).tiny * 10000000
+    
+
+    # 
+    with torch.no_grad():
+    # # Replace inf and -inf with max_float
+        S = torch.where(torch.isinf(S), torch.tensor(max_float, dtype=torch.float64), S)
+
+    # # Replace 0 with tiny_float
+        S = torch.where(S == 0.0, torch.tensor(tiny_float, dtype=torch.float64), S)
+
+
 
     S = S.repeat(1,m)
 

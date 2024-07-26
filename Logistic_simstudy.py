@@ -42,7 +42,7 @@ def main(task_id):
     y_sample_sizes = [50,100,200,500,1000]
 
     # true parameters
-    alpha_list = [0.05, 0.1, 0.3, 0.7, 0.95]
+    alpha_list = [0.1, 0.3, 0.7, 0.9]
 
     #dims
     dim_list = [1,2,5,10,20]
@@ -51,7 +51,7 @@ def main(task_id):
     b_list = ["AUTO", 0.01, 0.1]
 
     # number number iterations
-    nr_iterations = 800
+    nr_iterations = 2500
 
 
 
