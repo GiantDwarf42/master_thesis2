@@ -107,3 +107,18 @@ data_output.to_pickle(f"{saving_path_result_data}/Logistics_result_b0.01.pkl")
 data_output = df_last_150_proper_aggregation_index_reset[df_last_150_proper_aggregation_index_reset["b"]=="bAUTO"]
 data_output.to_pickle(f"{saving_path_result_data}/Logistics_result_bAUTO.pkl")
 
+
+
+
+number_iterations = 2500
+df = pd.concat([df, pd.DataFrame.from_dict({"Iteration": np.tile(np.arange(number_iterations),int(df.shape[0]/number_iterations))})], axis=1)
+df
+
+param_combinations = df.groupby(["alpha", "dim", "b", "xsize", "ysize"]).groups.keys()
+param_combinations
+
+
+saving_path_convergence = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Logistic_Convergence_charts"
+
+
+
