@@ -26,3 +26,6 @@ cov.mat <- sapply(1:N, function(i) sapply(1:N, function(j)
                      vario(coord[i,]) + vario(coord[j,]) - vario(coord[i,]-coord[j,])))
 
 cov.mat
+
+
+chol(cov.mat)

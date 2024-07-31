@@ -74,9 +74,21 @@ def sim_huesler_reis(coord, vario, loc=1., scale=1., shape=1., no_simu=1):
 
 	# Compute the covariance matrix
 	cov_mat = vario_coord.unsqueeze(1) + vario_coord.unsqueeze(0) - vario_diff
+	# I guess we add this for numerical reasons?
+	cov_mat = cov_mat + 1e-6
 
+	# cholevski decomposition for upper triangular matrix
+
+	chol_mat = torch.cholesky(cov_mat, upper=True)
+
+
+
+	return None
 
 	
+
+
+
 
 
 
@@ -115,7 +127,10 @@ cov_mat = vario_coord.unsqueeze(1) + vario_coord.unsqueeze(0) - vario_diff
 cov_mat
 #%%
 #%%
+cov_mat + 1e-6
 
 #%%
+
+torch.cholesky(cov_mat, upper=True)
 
 #%%

@@ -31,7 +31,11 @@ simu_specfcts <- function(loc=1, scale=1, shape=1, no.simu=1,
                      vario(coord[i,]) + vario(coord[j,]) - vario(coord[i,]-coord[j,])))
   cov.mat <- cov.mat + 1e-6 
   #add constant random effect to avoid numerical problems            
+  
+  # cholevski decomposition
   chol.mat <- chol(cov.mat)
+  
+  
   trend <- sapply(1:N, function(k) sapply(1:N, function(j) vario(coord[j,]-coord[k,])))
    
   res <- matrix(0, nrow=no.simu, ncol=N)
