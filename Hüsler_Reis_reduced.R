@@ -1,7 +1,11 @@
 ## internal functions: do not use any of them directly!
 simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
   stopifnot(length(idx)==1 || length(idx)==no.simu)
+  
+  # random component
   res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
+  #res <- t(chol.mat)%*%matrix(1, nrow = N, ncol = no.simu)
+  
   if (!is.matrix(trend)) {
     res <- exp(t(res - trend))
   } else {
@@ -12,7 +16,7 @@ simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
 
 ## main functions
 
-simu_specfcts <- function(loc=1, scale=1, shape=1, no.simu=1, 
+simu_specfcts <- function(loc=0, scale=1, shape=1, no.simu=1, 
                           coord, vario) {
 
  
@@ -40,8 +44,11 @@ simu_specfcts <- function(loc=1, scale=1, shape=1, no.simu=1,
    
   res <- matrix(0, nrow=no.simu, ncol=N)
   counter <- rep(0, times=no.simu)
- 
+  
+  # random component
   poisson <- rexp(no.simu)
+  #poisson <- rep(1, no.simu)
+
   ind <- rep(TRUE, times=no.simu)
   
   while (any(ind)) {
@@ -54,7 +61,12 @@ simu_specfcts <- function(loc=1, scale=1, shape=1, no.simu=1,
     stopifnot(dim(proc)==c(n.ind, N))
     proc <- N*proc/rowSums(proc)     
     res[ind,] <- pmax(res[ind,], proc/poisson[ind])
+    
+    # random component
     poisson[ind] <- poisson[ind] + rexp(n.ind)
+    #poisson[ind] <- poisson[ind] + rep(1, n.ind)
+    
+    
     ind <- (N/poisson > apply(res, 1, min))
   }
   res <- sapply(1:N, function(i) {

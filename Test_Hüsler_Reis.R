@@ -8,14 +8,14 @@ set.seed(42)
 ## the algorithm devised by Dieker and Mikosch, 2105) and extremal functions
 coord <- cbind(1:5, -2:2)
 vario <- function(x) sqrt(sum(x^2))
-res1  <- simu_specfcts(model="brownresnick", no.simu=100, coord=coord, 
-                       vario=vario)
+coord
                      
 
-res1  <- simu_specfcts(no.simu=100, coord=coord, 
+res1  <- simu_specfcts(no.simu=10, coord=coord, 
                        vario=vario)
 
-coord
+
+
 
 res1
 
@@ -37,22 +37,6 @@ trend
 poisson <- rexp(10)
 poisson
 
-
-simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
-  stopifnot(length(idx)==1 || length(idx)==no.simu)
-  res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
-
-  res <- t(chol.mat)%*%matrix(matrix(1, nrow = N, ncol = no.simu), ncol=no.simu)
-
-  if (!is.matrix(trend)) {
-    res <- exp(t(res - trend))
-  } else {
-    res <- exp(t(res - trend[,idx]))   
-  }
-
-  print(res)
-  return(res/res[cbind(1:no.simu,idx)])
-}
 
 
 N <- 5
@@ -86,10 +70,11 @@ res
 
 
 
+matrix(1, nrow = N, ncol = no.simu)
 
 
 
-
+rep(1, no.simu)
 
 
 
