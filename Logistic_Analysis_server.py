@@ -324,9 +324,11 @@ for alpha, dim, b in param_combinations:
 	for ax in g.axes.flat:
 		ax.legend(handles=handles, labels=new_labels, title='Parameter')
 
+	
+
 	# Set titles and axis labels
-	g.set_axis_labels('response sample size', 'Parameter Values')
-	g.set_titles(col_template='simulations distribution sample size : {col_name}')
+	g.set_axis_labels('simulation sample size', 'Parameter Values')
+	g.set_titles(col_template='response sample size : {col_name}')
 
 	# Adjust the main title
 	plt.subplots_adjust(top=0.93)
