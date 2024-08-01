@@ -14,6 +14,7 @@ res1  <- simu_specfcts(model="brownresnick", no.simu=100, coord=coord,
 
 res1  <- simu_specfcts(no.simu=100, coord=coord, 
                        vario=vario)
+
 coord
 
 res1
@@ -76,12 +77,12 @@ chol.mat
 simu_px_brownresnick(no.simu, shift, N, trend, chol.mat)
 
 
+res = -5:4
+(N/poisson > apply(matrix(res), 1, min))
 
+N/poisson
 
-
-
-
-
+res
 
 
 

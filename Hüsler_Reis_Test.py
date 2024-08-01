@@ -92,6 +92,7 @@ def sim_huesler_reis(coord, vario, loc=1., scale=1., shape=1., no_simu=1):
 
 	# draw exponential rv
 	poisson = torch.zeros([no_simu]).exponential_(lambd=1).to(device)
+	#poisson = torch.ones([no_simu]).to(device)
 
 	# get the loop termination condition
 	ind = torch.tensor(np.repeat(True, no_simu))
@@ -102,26 +103,47 @@ def sim_huesler_reis(coord, vario, loc=1., scale=1., shape=1., no_simu=1):
 	while(ind.any()):
 		
 		
-		n_ind = torch.sum(ind)
+		n_ind = torch.sum(ind).item()
 		counter[ind] = counter[ind] + 1
 
 
-		shift = torch.randint(1, N+1, (n_ind,), dtype=torch.int)
+		shift = torch.randint(0, N, (n_ind,), dtype=torch.int)
 
 
-		proc = simu_px_brownresnick()
+		# draw from the Hüsler Reis distribution
+		proc = simu_px_brownresnick(n_ind, shift, N, trend, chol_mat)
+
+
+		assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
+
+		proc = N * proc / proc.sum(dim=1, keepdim=True)
+
+		# maybe unsqueeze is an issue keep in mind
+		res[ind, :] = torch.maximum(res[ind, :], proc / poisson[ind].unsqueeze(1))
+
+		# create additional exponential term
+		exp_rv = torch.zeros(n_ind).exponential_(lambd=1).to(device)
+
+		poisson[ind] = poisson[ind] + exp_rv
+
+		ind = (N / poisson > res.min(dim=1).values)
+
+		print(f"{ind}")
 
 
 
+	print("loop done")
+	res_transformed = torch.where(
+		torch.abs(shape) < 1e-12,
+		torch.log(res) * scale.unsqueeze(0) + loc.unsqueeze(0),
+		(1 / shape.unsqueeze(0)) * (res ** shape.unsqueeze(0) - 1) * scale.unsqueeze(0) + loc.unsqueeze(0)
+		)
 
 
-	return None
+	return {"res": res_transformed,
+	 	"counter": counter}
 
 	
-
-
-
-
 
 
 #%%
@@ -132,9 +154,9 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
 
 
 	# Generate random normal matrix with N rows and no_simu columns
-	#random_matrix = torch.randn(N, no_simu)
+	random_matrix = torch.randn(N, no_simu)
 
-	random_matrix = torch.ones(N, no_simu)
+	#random_matrix = torch.ones(N, no_simu)
 
 	# Perform matrix multiplication
 	res = torch.mm(chol_mat.t(), random_matrix)
@@ -150,11 +172,12 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
 	else:
 		res = torch.exp((res - trend[:, idx]).t())
 
-	print(res)
 	
 	# Normalize the results
 	norm_factor = res[torch.arange(no_simu), idx]
 	res = res / norm_factor.unsqueeze(1)
+
+
 
 	return res
 
@@ -187,20 +210,18 @@ chol_mat
 #%%
 t = simu_px_brownresnick(no_simu, shift, N, trend, chol_mat)
 
+t.shape
+#%%
+idx = 10
+res = sim_huesler_reis(coord, vario, no_simu=100)
+
 
 #%%
-t
+coord
 #%%
-shift
-#%%
-trend[:, shift]
-#%%
-shift
-#%%
-torch.randn(N, no_simu).shape
+res
 #%%
 #%%
-torch.ones(N, no_simu)
 #%%
 #%%
 #%%
