@@ -29,3 +29,84 @@ cov.mat
 
 
 chol(cov.mat)
+
+trend <- sapply(1:N, function(k) sapply(1:N, function(j) vario(coord[j,]-coord[k,])))
+trend
+
+poisson <- rexp(10)
+poisson
+
+
+simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
+  stopifnot(length(idx)==1 || length(idx)==no.simu)
+  res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
+
+  res <- t(chol.mat)%*%matrix(matrix(1, nrow = N, ncol = no.simu), ncol=no.simu)
+
+  if (!is.matrix(trend)) {
+    res <- exp(t(res - trend))
+  } else {
+    res <- exp(t(res - trend[,idx]))   
+  }
+
+  print(res)
+  return(res/res[cbind(1:no.simu,idx)])
+}
+
+
+N <- 5
+no.simu <- 10
+
+
+
+set.seed(42)
+
+n.ind <- 10
+
+shift <- sample(1:N, n.ind, replace=TRUE)
+
+chol.mat <- chol(cov.mat)
+
+no.simu
+shift
+N
+trend
+chol.mat
+
+simu_px_brownresnick(no.simu, shift, N, trend, chol.mat)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+length(shift)
+chol.mat
+
+
+res1  <- simu_specfcts(no.simu=100, coord=coord, 
+                       vario=vario)
+res1
+
+
+matrix(1:N*no.simu, nrow = N)
+
+
+matrix(rnorm(N*no.simu), ncol=no.simu)
+
+matrix(1, nrow = N, ncol = no.simu)

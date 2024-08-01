@@ -43,6 +43,7 @@ simu_specfcts <- function(loc=1, scale=1, shape=1, no.simu=1,
  
   poisson <- rexp(no.simu)
   ind <- rep(TRUE, times=no.simu)
+  
   while (any(ind)) {
     n.ind <- sum(ind)
     counter[ind] <- counter[ind] + 1
