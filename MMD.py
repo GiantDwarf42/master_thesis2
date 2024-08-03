@@ -542,7 +542,7 @@ def sim_huesler_reis(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1
         counter[ind] = counter[ind] + 1
 
 
-        # random comoponent
+        # random component
         shift = torch.randint(0, N, (n_ind,), dtype=torch.int)
 
 
