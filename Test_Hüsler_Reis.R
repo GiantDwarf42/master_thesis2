@@ -28,8 +28,8 @@ res2
 
 
 
-simu_extrfcts <- function(loc=1, scale=1, shape=1, no.simu=1, 
-                          coord, vario, corr) {
+simu_extrfcts <- function(coord, vario, 
+                loc=1, scale=1, shape=1, no.simu=1) {
                             
         
   
