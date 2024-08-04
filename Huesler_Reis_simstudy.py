@@ -18,6 +18,7 @@ from scipy.stats import norm
 #self written modules
 import MMD
 
+
 #%%
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.set_default_dtype(torch.float64)
@@ -44,7 +45,8 @@ lr = 0.01
 # setup parameter permutations
 
 # setup variogram
-vario = MMD.vario_alpha_pnorm
+Vario = MMD.Vario(torch.tensor([1.]),torch.tensor([2.]))
+
 
 #%%
 
@@ -60,24 +62,111 @@ y_sample_sizes = [50,100,200,500,1000]
 
 # true parameters
 alpha_list = [0.1, 0.3, 0.7, 0.9]
+p_list = [1,2,10,1000]
 
 #dims
 dim_list = [1,2,5,10,20]
 
 # bandwidth
-b_list = ["AUTO", 0.01, 0.1]
+b_list = ["AUTO"]
 
 # number number iterations
 nr_iterations = 2500
 
 
+for b_value in b_list:
 
-for grid in grids:
+    for grid in grids:
 
+        for alpha in alpha_list:
+
+            for p in p_list:
+                 
+                for x_sample_size in x_sample_sizes:
+
+                    for y_sample_size in y_sample_sizes:
+                    
+                        if x_sample_size >= y_sample_size:
+
+                            
+                            grid_size = np.sqrt(grid.shape[0])
+
+                            file_name = f"grid{grid_size}_alpha{alpha}_p{p}xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
+
+                            #sample the response
+                            y = MMD.sim_huesler_reis_ext(grid, Vario, device, no_simu=y_sample_size)
+
+
+                            
+                            # check if b heuristic needs to be calculated
+                            if b_value == "AUTO":
+
+                            # setting up initial b_params 
+                                b_params = {"Vario": Vario,
+                                            "grid": grid}
+
+                            # b heuristic could also just be a value
+                                b = MMD.calc_b_heuristic(y, x_sample_size, "huesler_reis", device, b_params).item()
+
+                                #check if b needs to be iteratively updated
+                                if b_value == "AUTO":
+                                    b_update = 100
+                                else:
+                                    b_update = False
+
+
+                                #take start time
+                                now=datetime.now()
+
+                                #setup the parameters to optimize
+                                alpha_hat = torch.tensor([1.]).to(device).requires_grad_()
+                                p_hat = torch.tensor([2.]).to(device).requires_grad_()
+                        
+                                # setup optimizer
+                                optimizer = torch.optim.Adam([alpha_hat, p_hat], lr=lr)
+
+                                Vario.alpha = alpha_hat
+                                Vario.p = p_hat
+
+
+                                print(Vario.p)
+                                print(Vario.alpha)
+
+                                break
+                        
+                                # run the actual simulation
+                                simulated_df = MMD.training_loop_multi_logist(alpha_hat, y, nr_iterations, x_sample_size, device, b, optimizer, epoch_print_size=False,b_update=b_update)
+
+                        
+
+                                simulated_df.to_csv(f"{folder_name}/{file_name}.csv")
+
+                                break
+                    
+                            else:
+                                continue
+
+
+
+                                
+
+                            
+                        break
+                    break
+                break
     
+            break
+        break
+    break  
 
 
+#%%
 
+vario.alpha = 10
+
+#%%
+
+#%%
 
 #going through parameter permutation
 

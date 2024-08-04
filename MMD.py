@@ -59,6 +59,18 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
             x = sample_multivariate_logistic(n,y.shape[1], params["alpha"], device)
             b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
 
+    elif case == "huesler_reis":
+        
+        grid = params["grid"]
+
+        Vario = params["Vario"]
+
+
+        x = sim_huesler_reis_ext(grid, Vario, device, no_simu=n)
+        
+        b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
+         
+
     return b
 
 def training_loop_gauss(mu_hat, sigma_hat,target_dist, nr_iterations , sample_size, device, b, optimizer, epoch_print_size=500, b_update=0)->pd.DataFrame:
@@ -396,48 +408,7 @@ def sample_PS(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
     return S
 
 
-def sample_PS_scipy(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
 
-    # get uniform distribution
-    U = torch.zeros([n,1]).uniform_(0,torch.pi).to(device)
-    
-    # get the exponent or c value (evi)
-    exponent = (1-alpha)/alpha
-
-    # location and scale provided by Flo
-    loc = 1
-    scale = 1
-    
-    print(type(exponent))
-
-    if isinstance(exponent, torch.Tensor):
-
-        exponent_value = exponent.detach().numpy()
-
-    else:
-        exponent_value = exponent
-
-    # sample from Frèchet distribution
-
-    if exponent_value <= 0:
-        exponent_value = 0.01
-    F = genextreme.rvs(exponent_value, loc=loc, scale=scale, size=[n,1])
-
-    # make torch tensor
-    F_tensor = torch.Tensor(F).to(device)
-
-
-    A = torch.sin((1-alpha)*U)
-
-    comp1 = A**exponent * F_tensor
-
-    comp2 = torch.sin(alpha*U)/(torch.sin(U)**(1-alpha))
-    
-    S =  comp1 * comp2
-
-    S = S.repeat(1,m)
-
-    return S
 
 
 def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
@@ -590,7 +561,94 @@ def sim_huesler_reis(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1
     return res_transformed
 
 
-def sim_huesler_reis_ext(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1):
+def sim_huesler_reis_ext(coord, Vario, device, loc=1., scale=1., shape=1., no_simu=1):
+
+	assert isinstance(coord, torch.Tensor), f"coord must be a torch.tensor but is a {type(coord)}"
+
+	N = coord.shape[0]
+
+	if isinstance(loc, float):
+
+		loc = torch.tensor(np.repeat(loc, N), device=device)
+		
+     
+
+	if isinstance(scale, float):
+
+		scale = torch.tensor(np.repeat(scale, N), device=device)
+		
+
+	if isinstance(shape, float):
+
+		shape = torch.tensor(np.repeat(shape, N), device=device)
+		
+
+	assert torch.all(scale > 1e-12), f"all scale values must be bigger than 1e-12"
+
+
+	# Compute covariance matrix using broadcasting
+	coord_i = coord.unsqueeze(1)  # Shape (N, 1, d)
+	coord_j = coord.unsqueeze(0)  # Shape (1, N, d)
+	cov_matrix = Vario.vario(coord_i) + Vario.vario(coord_j) - Vario.vario(coord_i - coord_j)
+	cov_matrix += 1e-6  # Add small constant for numerical stability
+
+	# cholevski decomposition for upper triangular matrix
+	chol_mat = torch.linalg.cholesky(cov_matrix, upper=True)
+
+
+	# Initialize a zero matrix res with shape (no_simu, N)
+	res = torch.zeros((no_simu, N))
+
+
+	# Initialize a zero vector counter with length no_simu
+	counter = torch.zeros(no_simu, dtype=torch.int)
+
+	for k in range(N):
+
+		# create additional exponential term
+		# random component
+		poisson = torch.zeros(no_simu).exponential_(lambd=1).to(device)
+		#poisson = torch.ones(no_simu).to(device)
+
+		trend = Vario.vario(coord -coord[k])
+
+		while torch.any(1 / poisson > res[:, k]):
+			ind = 1 / poisson > res[:, k]
+			n_ind = ind.sum().item()
+			idx = torch.arange(no_simu)[ind]
+			counter[ind] += 1
+
+			proc = simu_px_brownresnick(no_simu=n_ind, idx=torch.tensor([k]), N=N, trend=trend, chol_mat=chol_mat)
+			
+			assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
+
+
+			if k == 1:
+
+				ind_upd = torch.tensor(np.repeat(True, n_ind))
+			else:
+				ind_upd = torch.tensor([torch.all(1 / poisson[idx[i]] * proc[i, :k] <= res[idx[i], :k]) for i in range(n_ind)])
+
+			if ind_upd.any():
+				idx_upd = idx[ind_upd]
+				res[idx_upd, :] = torch.maximum(res[idx_upd, :], 1 / poisson[idx_upd].unsqueeze(1) * proc[ind_upd, :])
+
+			#this is random
+			poisson[ind] = poisson[ind] + torch.zeros(n_ind).exponential_(lambd=1)
+			#poisson[ind] = poisson[ind] + torch.ones(n_ind)
+
+	
+	# Apply final transformation
+	res_transformed = torch.where(
+		torch.abs(shape) < 1e-12,
+		torch.log(res) * scale.unsqueeze(0) + loc.unsqueeze(0),
+		(1 / shape.unsqueeze(0)) * (res ** shape.unsqueeze(0) - 1) * scale.unsqueeze(0) + loc.unsqueeze(0)
+    )
+
+	return res_transformed
+
+
+def sim_huesler_reis_ext_safety(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1):
 
 	assert isinstance(coord, torch.Tensor), f"coord must be a torch.tensor but is a {type(coord)}"
 
@@ -676,7 +734,6 @@ def sim_huesler_reis_ext(coord, vario, device, loc=1., scale=1., shape=1., no_si
     )
 
 	return res_transformed
-	#return {"res": res_transformed, "counter": counter}
      
 
 def vario_alpha_pnorm(x, alpha=1., p=2.):
@@ -730,3 +787,55 @@ def plot_grid(grid):
     plt.axvline(0, color='grey', linestyle='--', linewidth=0.5)
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
+
+
+def vario_alpha_pnorm(x, alpha=1., p=2.):
+
+	norm = alpha * (torch.sum(x**p, dim=-1))**(1/p)
+
+	return norm 
+
+
+class Vario:
+     
+    def __init__(self, alpha, p):
+        
+        self._alpha = alpha
+        self._p = p
+
+    @property
+    def alpha(self):
+         
+         return self._alpha
+    
+    @alpha.setter
+    def alpha(self, new_alpha):
+         
+         self._alpha = new_alpha
+
+    @property
+    def p(self):
+         
+        return self._p
+    
+    @p.setter
+    def p(self, new_p):
+         
+         self._p = new_p
+
+
+
+    def __str__(self):
+        return f"Vario(alpha={self.alpha.item()}, p={self.p.item()})"
+    
+    def __repr__(self):
+        return f"Vario(alpha={self.alpha.item()}, p={self.p.item()})"
+    
+
+    def vario(self, x):
+     
+        
+        norm = self._alpha * (torch.sum(x**self._p, dim=-1))**(1/self._p)
+
+        return norm 
+          
