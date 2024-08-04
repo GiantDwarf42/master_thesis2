@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import time
 from scipy.stats import genextreme
+import matplotlib.pyplot as plt
 
 
 def kernel_gauss_cdist(cdist:torch.tensor, b:int=1)->torch.tensor:
@@ -589,7 +590,7 @@ def sim_huesler_reis(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1
     return res_transformed
 
 
-def sim_huesler_reis_ext(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1):
+def sim_huesler_reis_ext(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1):
 
 	assert isinstance(coord, torch.Tensor), f"coord must be a torch.tensor but is a {type(coord)}"
 
@@ -631,8 +632,6 @@ def sim_huesler_reis_ext(coord, vario, device, loc=0., scale=1., shape=1., no_si
 
 	# Initialize a zero vector counter with length no_simu
 	counter = torch.zeros(no_simu, dtype=torch.int)
-
-
 
 	for k in range(N):
 
@@ -678,3 +677,56 @@ def sim_huesler_reis_ext(coord, vario, device, loc=0., scale=1., shape=1., no_si
 
 	return res_transformed
 	#return {"res": res_transformed, "counter": counter}
+     
+
+def vario_alpha_pnorm(x, alpha=1., p=2.):
+
+	norm = alpha * (torch.sum(x**p, dim=-1))**(1/p)
+
+	return norm 
+
+def create_centered_grid(size):
+    """
+    Create a centered grid with the given size.
+    
+    Args:
+    size (int): The size of the grid (e.g., 2 for a 2x2 grid, 3 for a 3x3 grid, etc.).
+    
+    Returns:
+    torch.Tensor: A tensor of shape (size*size, 2) representing the grid coordinates.
+    """
+    # Generate linear space from -1 to 1 with the specified size
+    linear_space = torch.linspace(-1, 1, size)
+    
+    # Create the meshgrid from the linear space
+    x, y = torch.meshgrid(linear_space, linear_space, indexing='ij')
+    
+    # Combine x and y coordinates into a single tensor and reshape it to the desired format
+    grid = torch.stack([x, y], dim=-1).reshape(-1, 2)
+    
+    return grid
+
+
+def plot_grid(grid):
+    """
+    Plot the grid points using a scatter plot.
+    
+    Args:
+    grid (torch.Tensor): The grid tensor of shape (n*n, 2).
+    title (str): The title of the plot.
+    """
+    # Convert the tensor to a numpy array for plotting
+    grid_np = grid.numpy()
+    
+    grid_size = np.sqrt(grid.shape[0]).item()
+
+    # Create the scatter plot
+    plt.scatter(grid_np[:, 0], grid_np[:, 1], marker='o')
+    plt.title(f"{grid_size}x{grid_size} Grid")
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.grid(True)
+    plt.axhline(0, color='grey', linestyle='--', linewidth=0.5)
+    plt.axvline(0, color='grey', linestyle='--', linewidth=0.5)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()

@@ -11,7 +11,7 @@ vario <- function(x) sqrt(sum(x^2))
 coord
                      
 
-res1  <- simu_specfcts(no.simu=10, coord=coord, 
+res1  <- simu_specfcts(no.simu=15, coord=coord, 
                        vario=vario)
 
 
