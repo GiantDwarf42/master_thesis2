@@ -15,10 +15,7 @@ pd.options.display.max_rows = 500
 # 
 
 # %%
-load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Logistic_Data_processed\Logistic_Processed_data_b0.01.pkl"
-#load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Logistic_Data_processed\Logistic_Processed_data_b0.1.pkl"
-#load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Logistic_Data_processed\Logistic_Processed_data_bAUTO.pkl"
-
+load_path = r"/home/users/k/kipfer2/Logistic_processed_results/Data/Logistic_Processed_data.pkl"
 
 #loading the data
 
@@ -96,7 +93,7 @@ df_last_150_proper_aggregation_index_reset.head()
 
 # %%
 # %%
-saving_path_result_data = f"/home/users/k/kipfer2/Logistics_processed_results/processed_tables"
+saving_path_result_data = f"/home/users/k/kipfer2/Logistic_processed_results/processed_tables"
 
 # %%
 data_output = df_last_150_proper_aggregation_index_reset[df_last_150_proper_aggregation_index_reset["b"]=="b0.1"]
@@ -122,11 +119,9 @@ df
 # %%
 df.columns
 
-# %%
-df.shape[0]/800/150 # in total there are 3*375 parameter combinations, this checks out
 
 # %%
-number_iterations = 800
+number_iterations = 2500
 df = pd.concat([df, pd.DataFrame.from_dict({"Iteration": np.tile(np.arange(number_iterations),int(df.shape[0]/number_iterations))})], axis=1)
 df
 
@@ -135,7 +130,7 @@ param_combinations = df.groupby(["alpha", "dim", "b", "xsize", "ysize"]).groups.
 param_combinations
 
 # %%
-saving_path_convergence = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Data\Logistic_Convergence_charts"
+saving_path_convergence = r"/home/users/k/kipfer2/Logistic_processed_results/convergence_charts"
 
 # %% [markdown]
 # # Convergence Charts
@@ -175,16 +170,14 @@ for alpha, dim, b, xsize, ysize in param_combinations:
     plt.legend(by_label.values(), by_label.keys(), title='Parameter')
     
     file_name = f"alpha{alpha}_dim{dim}_b{b}_xsize{xsize}_ysize{ysize}.png"
-    #plt.savefig(f"{saving_path_convergence}/{file_name}")
-    plt.show()
+    plt.savefig(f"{saving_path_convergence}/{file_name}")
+    #plt.show()
     plt.close()
 
     counter += 1
     print(f"created and saved {counter} figures")
 
-    if counter == 1:
 
-        break
 
 # %%
 
@@ -193,7 +186,7 @@ for alpha, dim, b, xsize, ysize in param_combinations:
 # # Violin Charts
 
 # %%
-saving_path_sample_size_effect = r"/home/users/k/kipfer2/Gauss_processed_results/violin_charts"
+saving_path_sample_size_effect = r"/home/users/k/kipfer2/Logistic_processed_results/violin_charts"
 
 # %%
 df_last_150_aggregated_index_reset = df_last_150_aggregated.reset_index()
@@ -267,8 +260,8 @@ for alpha, dim, b in param_combinations:
 
 	file_name = f"alpha{alpha}_dim{dim}_{b}_yeffect"
 
-	#plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
-	plt.show()
+	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
+	#plt.show()
 
 	plt.close()
 
@@ -276,8 +269,7 @@ for alpha, dim, b in param_combinations:
 
 	print(f"created and saved {counter} figures")
 
-	if counter == 1:
-		break
+
 
 	
 
@@ -332,9 +324,11 @@ for alpha, dim, b in param_combinations:
 	for ax in g.axes.flat:
 		ax.legend(handles=handles, labels=new_labels, title='Parameter')
 
+	
+
 	# Set titles and axis labels
-	g.set_axis_labels('response sample size', 'Parameter Values')
-	g.set_titles(col_template='simulations distribution sample size : {col_name}')
+	g.set_axis_labels('simulation sample size', 'Parameter Values')
+	g.set_titles(col_template='response sample size : {col_name}')
 
 	# Adjust the main title
 	plt.subplots_adjust(top=0.93)
@@ -345,8 +339,8 @@ for alpha, dim, b in param_combinations:
 
 	file_name = f"alpha{alpha}_dim{dim}_{b}_xeffect"
 
-	#plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
-	plt.show()
+	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
+	#plt.show()
 
 	plt.close()
 
@@ -354,8 +348,7 @@ for alpha, dim, b in param_combinations:
 
 	print(f"created and saved {counter} figures")
 
-	if counter == 1:
-		break
+
 
 	
 

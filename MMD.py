@@ -437,3 +437,157 @@ def sample_PS_scipy(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
     S = S.repeat(1,m)
 
     return S
+
+
+def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
+
+    # Check the condition and raise an error if not met
+    assert idx.numel() == 1 or idx.numel() == no_simu, "Length of idx must be 1 or no_simu"
+
+
+    # Generate random normal matrix with N rows and no_simu columns
+    # random component
+    random_matrix = torch.randn(N, no_simu)
+    #random_matrix = torch.ones(N, no_simu)
+
+    # Perform matrix multiplication
+    res = torch.mm(chol_mat.t(), random_matrix)
+
+    # Apply trend and calculate exponentiated results
+    if not isinstance(trend, torch.Tensor):
+        trend = torch.tensor(trend)
+
+    # Apply trend and calculate exponentiated results
+    print(trend.shape)
+    print(trend)
+    print(res.shape)
+    print(res)
+    if trend.dim() == 1:
+            #res = torch.exp((res.t() - trend).t())
+
+            # Ensure trend is correctly broadcastable
+            trend_expanded = trend.unsqueeze(1)  # Shape (N, 1)
+            res = torch.exp(res - trend_expanded).t()
+
+    else:
+        #res = torch.exp((res.t() - trend[:, idx]).t())
+
+        trend_expanded = trend[:, idx]  # Shape (N, no_simu)
+        res = torch.exp((res - trend_expanded).t())
+
+    # Normalize the results
+    norm_factor = res[torch.arange(no_simu), idx]
+    res = res / norm_factor.unsqueeze(1)
+
+    return res
+
+def sim_huesler_reis(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1.):
+
+    N = coord.shape[0]
+
+    if isinstance(loc, float):
+
+        loc = torch.tensor(np.repeat(loc, N), requires_grad=True)
+        loc = loc.to(device)
+     
+
+    if isinstance(scale, float):
+
+        scale = torch.tensor(np.repeat(scale, N), requires_grad=True)
+        scale = scale.to(device)
+
+    if isinstance(shape, float):
+
+        shape = torch.tensor(np.repeat(shape, N), requires_grad=True)
+        shape = shape.to(device)
+
+    assert torch.all(scale > 1e-12), f"Not all elements in 'scale' {scale} are greater than 1e-12"
+
+    assert callable(vario), f" vario must be a function"
+
+	# calculate the covariance matrix
+	# Compute pairwise differences using broadcasting
+    coord_i = coord.unsqueeze(1).expand(N, N, 2)  # Shape (N, N, 2)
+    coord_j = coord.unsqueeze(0).expand(N, N, 2)  # Shape (N, N, 2)
+    diff = coord_i - coord_j  # Shape (N, N, 2)
+
+    # Apply the vario function
+    vario_diff = vario(diff)  # Shape (N, N)
+
+    # Apply the vario function to the original coordinates
+    vario_coord = vario(coord)  # Shape (N,)
+
+    # Compute the covariance matrix
+    cov_mat = vario_coord.unsqueeze(1) + vario_coord.unsqueeze(0) - vario_diff
+    # I guess we add this for numerical reasons?
+    cov_mat = cov_mat + 1e-6
+
+    # cholevski decomposition for upper triangular matrix
+
+    chol_mat = torch.linalg.cholesky(cov_mat, upper=True)
+
+	# get the trend which is the same as the difference
+    trend = vario_diff
+
+    # Initialize a zero matrix res with shape (no_simu, N)
+    res = torch.zeros((no_simu, N))
+
+    # Initialize a zero vector counter with length no_simu
+    counter = torch.zeros(no_simu, dtype=torch.int)
+
+    # draw exponential rv
+    # random component
+    poisson = torch.zeros([no_simu]).exponential_(lambd=1).to(device)
+    #poisson = torch.ones([no_simu]).to(device)
+
+    # get the loop termination condition
+    ind = torch.tensor(np.repeat(True, no_simu))
+
+
+	# actual algorithm => hopefully auto.diff can handle this loop
+
+    while(ind.any()):
+		
+		
+        n_ind = torch.sum(ind).item()
+        counter[ind] = counter[ind] + 1
+
+
+        # random component
+        shift = torch.randint(0, N, (n_ind,), dtype=torch.int)
+
+
+        # draw from the Hüsler Reis distribution
+        proc = simu_px_brownresnick(n_ind, shift, N, trend, chol_mat)
+
+
+        assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
+
+        proc = N * proc / proc.sum(dim=1, keepdim=True)
+
+        # maybe unsqueeze is an issue keep in mind
+        res[ind, :] = torch.maximum(res[ind, :], proc / poisson[ind].unsqueeze(1))
+
+        # create additional exponential term
+        # random component
+        exp_rv = torch.zeros(n_ind).exponential_(lambd=1).to(device)
+        #exp_rv = torch.ones(n_ind).to(device)
+
+        poisson[ind] = poisson[ind] + exp_rv
+
+        ind = (N / poisson > res.min(dim=1).values)
+
+        #print(f"{ind}")
+
+	
+    res_transformed = torch.where(
+        torch.abs(shape) < 1e-12,
+        torch.log(res) * scale.unsqueeze(0) + loc.unsqueeze(0),
+        (1 / shape.unsqueeze(0)) * (res ** shape.unsqueeze(0) - 1) * scale.unsqueeze(0) + loc.unsqueeze(0)
+        )
+
+
+	# return {"res": res_transformed,
+	#  	"counter": counter}
+
+    return res_transformed
