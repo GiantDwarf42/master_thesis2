@@ -50,7 +50,9 @@ simu_extrfcts <- function(coord, vario,
         stopifnot(is.function(vario))
         cov.mat <- sapply(1:N, function(i) sapply(1:N, function(j) 
                      vario(coord[i,]) + vario(coord[j,]) - vario(coord[i,]-coord[j,])))
-        cov.mat <- cov.mat + 1e-6 
+        cov.mat <- cov.mat + 1e-6
+
+        
         #add constant random effect to avoid numerical problems            
         chol.mat <- chol(cov.mat)
   
@@ -100,16 +102,21 @@ simu_extrfcts <- function(coord, vario,
 }
 
 
+N <- nrow(coord)
+
+for (k in 1:N) {
+
+                trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
+                print(trend)
+                
+}
 
 
 
 
 
 
-
-
-
-
+trend
 
 
 

@@ -79,3 +79,10 @@ simu_specfcts <- function(loc=0, scale=1, shape=1, no.simu=1,
    
   return(list(res=res, counter=counter)) 
 }
+
+N <- nrow(coord)
+for (k in 1:N) {
+                
+                print(k)
+                trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
+                print(trend)}

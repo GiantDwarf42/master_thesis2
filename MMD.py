@@ -458,11 +458,22 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
         trend = torch.tensor(trend)
 
     # Apply trend and calculate exponentiated results
+    print(trend.shape)
+    print(trend)
+    print(res.shape)
+    print(res)
     if trend.dim() == 1:
-            res = torch.exp((res - trend).t())
+            #res = torch.exp((res.t() - trend).t())
+
+            # Ensure trend is correctly broadcastable
+            trend_expanded = trend.unsqueeze(1)  # Shape (N, 1)
+            res = torch.exp(res - trend_expanded).t()
 
     else:
-        res = torch.exp((res - trend[:, idx]).t())
+        #res = torch.exp((res.t() - trend[:, idx]).t())
+
+        trend_expanded = trend[:, idx]  # Shape (N, no_simu)
+        res = torch.exp((res - trend_expanded).t())
 
     # Normalize the results
     norm_factor = res[torch.arange(no_simu), idx]
