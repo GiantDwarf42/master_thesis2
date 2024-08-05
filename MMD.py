@@ -332,37 +332,10 @@ def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tenso
     # simulate from a positive stable distribution
     S = sample_PS(n, m, alpha, device)
 
-    # Test samplig alternative
-    #S = sample_PS_scipy(n, m, alpha, device)
-
-
-    # # Step 1.5:
-    # # trying to prevent inf and 0 values
-
-    # # Define the max float and tiny value for torch.float64
-    # max_float = np.finfo(np.float64).max / 10000
-    # tiny_float = np.finfo(np.float64).tiny * 10000
-
-    # # # Replace inf and -inf with max_float
-    # S = torch.where(torch.isinf(S), torch.tensor(max_float, dtype=torch.float64), S)
-
-    # # # Replace 0 with tiny_float
-    # S = torch.where(S == 0.0, torch.tensor(tiny_float, dtype=torch.float64), S)
-
-
     # Step 2:
     # sample random standard exponential variables independent of S
     W = torch.zeros([n,m]).exponential_(lambd=1).to(device)
     X = (S/W)**alpha
-
-
-
-    # Replace inf and -inf with max_float
-    #X = torch.where(torch.isinf(X), torch.tensor(max_float, dtype=torch.float64), X)
-
-    # Replace 0 with tiny_float
-    #X = torch.where(X == 0.0, torch.tensor(tiny_float, dtype=torch.float64), X)
-    # check for inf and check for inf and neginf, also if 0 is an issue
 
     return X
 
@@ -406,8 +379,6 @@ def sample_PS(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
     S = S.repeat(1,m)
 
     return S
-
-
 
 
 
@@ -838,4 +809,96 @@ class Vario:
         norm = self._alpha * (torch.sum(x**self._p, dim=-1))**(1/self._p)
 
         return norm 
-          
+
+
+def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_size, device, b, optimizer, epoch_print_size=500, b_update=0):
+   
+    alpha_hat_estimates = []
+    p_hat_estimates = []
+    MMD_values = []
+    b_values = []
+
+    times = []
+    start_time = time.time()
+
+    #the MMD yy case is a constant.
+    # no need to recalculate this for every epoch
+    MMD_yy_case = MMD_equal_case(target_dist,device,b)
+    
+    for epoch in np.arange(nr_iterations):
+
+        #iterative update of bandwidth value
+        if b_update:
+
+            if epoch % b_update == 0:
+
+                params = {"Vario": Vario,
+                          "grid": grid}
+                
+
+                b = calc_b_heuristic(target_dist, sample_size, "huesler_reis", device, params).item()
+
+                MMD_yy_case = MMD_equal_case(target_dist,device,b)
+
+
+        print(Vario)
+        # Empty gradient
+        optimizer.zero_grad()
+
+        # Sample from the generator
+        sample = sim_huesler_reis_ext(grid, Vario, device, no_simu=sample_size)
+        # Calculate Loss
+
+        # sample case
+        MMD_xx_case = MMD_equal_case(sample, device, b)
+        MMD_xy_case = MMD_mixed_case(sample,target_dist,device, b)
+        #loss
+        loss = MMD_xx_case + MMD_yy_case - MMD_xy_case
+
+        
+        #optimizer.zero_grad()
+        # Calculate gradient
+        loss.backward()
+        
+        # Take one SGD step
+        optimizer.step()
+
+        print(Vario)
+
+        
+
+
+        # # this is supposed to ensure that alpha_hat stays in the domain after optimization
+        # with torch.no_grad():  # Temporarily disable gradient tracking
+        #     if alpha_hat <= 0:
+        #         alpha_hat.copy_(torch.tensor(0.01))
+        #     elif alpha_hat >= 1:
+        #         alpha_hat.copy_(torch.tensor(0.99))
+
+        
+
+
+        alpha_hat_estimates.append(Vario.alpha.detach().clone())
+        p_hat_estimates.append(Vario.p.detach().clone())
+        MMD_values.append(loss.detach().clone())
+        b_values.append(b)
+        times.append(time.time()-start_time)
+
+
+        
+
+        if epoch_print_size:
+            if epoch%epoch_print_size==0:
+                print("epoch: ",epoch," loss=",loss)
+            
+    alpha_hat_estimates = torch.stack(alpha_hat_estimates).detach().numpy().reshape([nr_iterations,])
+    p_hat_estimates = torch.stack(p_hat_estimates).detach().numpy().reshape([nr_iterations,])
+    MMD_values = torch.stack(MMD_values).detach().numpy()
+
+    df_results = pd.DataFrame({"alpha_hat": alpha_hat_estimates,
+                               "p_hat": p_hat_estimates,
+                                "MMD": MMD_values,
+                                "b": b_values,
+                                "time": times})
+    
+    return df_results

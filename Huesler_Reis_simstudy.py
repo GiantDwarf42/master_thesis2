@@ -40,15 +40,9 @@ grids = [MMD.create_centered_grid(i) for i in range(2, grid_size+1)]
 folder_name= "Huesler_Reis_output"
 lr = 0.01
 
-
+#%%
 #######################################################################################################################3
 # setup parameter permutations
-
-# setup variogram
-Vario = MMD.Vario(torch.tensor([1.]),torch.tensor([2.]))
-
-
-#%%
 
 # create grids
 grid_size = 4
@@ -61,11 +55,11 @@ y_sample_sizes = [50,100,200,500,1000]
 
 
 # true parameters
-alpha_list = [0.1, 0.3, 0.7, 0.9]
-p_list = [1,2,10,1000]
+#alpha_list = [0.1, 0.3, 0.7, 0.9]
+#p_list = [1.,2.,10.,1000.]
 
-#dims
-dim_list = [1,2,5,10,20]
+alpha_list = [3.]
+p_list = [4.]
 
 # bandwidth
 b_list = ["AUTO"]
@@ -73,6 +67,7 @@ b_list = ["AUTO"]
 # number number iterations
 nr_iterations = 2500
 
+b_update=100
 
 for b_value in b_list:
 
@@ -93,8 +88,11 @@ for b_value in b_list:
 
                             file_name = f"grid{grid_size}_alpha{alpha}_p{p}xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
 
+                            # setup variogram
+                            Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
+
                             #sample the response
-                            y = MMD.sim_huesler_reis_ext(grid, Vario, device, no_simu=y_sample_size)
+                            y = MMD.sim_huesler_reis_ext(grid, Vario_true_params, device, no_simu=y_sample_size)
 
 
                             
@@ -102,7 +100,7 @@ for b_value in b_list:
                             if b_value == "AUTO":
 
                             # setting up initial b_params 
-                                b_params = {"Vario": Vario,
+                                b_params = {"Vario": Vario_true_params,
                                             "grid": grid}
 
                             # b heuristic could also just be a value
@@ -118,31 +116,30 @@ for b_value in b_list:
                                 #take start time
                                 now=datetime.now()
 
+                                
+
                                 #setup the parameters to optimize
                                 alpha_hat = torch.tensor([1.]).to(device).requires_grad_()
                                 p_hat = torch.tensor([2.]).to(device).requires_grad_()
                         
                                 # setup optimizer
                                 optimizer = torch.optim.Adam([alpha_hat, p_hat], lr=lr)
+                                
+                                #setup Vario object to optimize
+                                Vario = MMD.Vario(alpha_hat,p_hat)
 
-                                Vario.alpha = alpha_hat
-                                Vario.p = p_hat
+
+                                simulated_df = MMD.training_loop_huesler_reis(Vario, y, grid, nr_iterations , x_sample_size, device, b, optimizer, epoch_print_size=500, b_update=b_update)
 
 
-                                print(Vario.p)
-                                print(Vario.alpha)
-
-                                break
-                        
-                                # run the actual simulation
-                                simulated_df = MMD.training_loop_multi_logist(alpha_hat, y, nr_iterations, x_sample_size, device, b, optimizer, epoch_print_size=False,b_update=b_update)
-
+                                
                         
 
                                 simulated_df.to_csv(f"{folder_name}/{file_name}.csv")
 
                                 break
-                    
+
+
                             else:
                                 continue
 
