@@ -707,11 +707,6 @@ def sim_huesler_reis_ext_safety(coord, vario, device, loc=1., scale=1., shape=1.
 	return res_transformed
      
 
-def vario_alpha_pnorm(x, alpha=1., p=2.):
-
-	norm = alpha * (torch.sum(x**p, dim=-1))**(1/p)
-
-	return norm 
 
 def create_centered_grid(size):
     """
@@ -760,12 +755,6 @@ def plot_grid(grid):
     plt.show()
 
 
-def vario_alpha_pnorm(x, alpha=1., p=2.):
-
-	norm = alpha * (torch.sum(x**p, dim=-1))**(1/p)
-
-	return norm 
-
 
 class Vario:
      
@@ -802,29 +791,6 @@ class Vario:
     def __repr__(self):
         return f"Vario(alpha={self._alpha}, p={self._p})"
     
-
-    # def vario(self, x):
-     
-        
-    #     norm = self._alpha * (torch.sum(x**self._p, dim=-1))**(1/self._p)
-
-    #     return norm
-
-    # def vario(self, x):
-        
-    #     x_p = torch.pow(x, self._p)
-        
-    #     norm = self._alpha * torch.pow(torch.sum(x_p, dim=-1),1/self._p)
-
-    #     return norm 
-
-    # def vario(self, x):
-    #     print(f"Input x: {x}")
-    #     sum_x_p = torch.sum(x**self._p, dim=-1)
-    #     print(f"Sum x**p: {sum_x_p}")
-    #     norm = self._alpha * (sum_x_p)**(1/self._p)
-    #     print(f"Norm: {norm}")
-    #     return norm 
     
     def vario(self,x):
          
@@ -877,34 +843,12 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
         #loss
         loss = MMD_xx_case + MMD_yy_case - MMD_xy_case
 
-        # print(Vario)
-        # print(Vario.alpha.grad)
-        # print(Vario.p.grad)
-        
-        #optimizer.zero_grad()
         # Calculate gradient
         loss.backward()
         
-        # Gradient clipping
-        #torch.nn.utils.clip_grad_norm_([Vario.alpha, Vario.p], max_norm=1.0)
-        # Take one SGD step
-        # print(Vario)
-        # print(Vario.alpha.grad)
-        # print(Vario.p.grad)
-
+       
         optimizer.step()
-
-        #print(Vario)
-
-        
-
-
-        # # this is supposed to ensure that alpha_hat stays in the domain after optimization
-        # with torch.no_grad():  # Temporarily disable gradient tracking
-        #     if alpha_hat <= 0:
-        #         alpha_hat.copy_(torch.tensor(0.01))
-        #     elif alpha_hat >= 1:
-        #         alpha_hat.copy_(torch.tensor(0.99))
+  
 
         
         with torch.no_grad():
@@ -917,11 +861,6 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
             elif Vario.p > 2:
                  Vario.p.copy_(torch.tensor(1.99))
 
-            
-             
-
-        
-
 
         alpha_hat_estimates.append(Vario.alpha.detach().clone())
         p_hat_estimates.append(Vario.p.detach().clone())
@@ -929,8 +868,6 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
         b_values.append(b)
         times.append(time.time()-start_time)
 
-
-        
 
         if epoch_print_size:
             if epoch%epoch_print_size==0:

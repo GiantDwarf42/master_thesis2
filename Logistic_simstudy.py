@@ -127,7 +127,6 @@ def main(task_id):
                         
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python my_calculation.py <task_id>")
         sys.exit(1)
     
     task_id = sys.argv[1]
