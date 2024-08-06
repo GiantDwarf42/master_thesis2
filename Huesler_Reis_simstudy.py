@@ -46,26 +46,29 @@ lr = 0.01
 
 # create grids
 grid_size = 4
-grids = [MMD.create_centered_grid(i) for i in range(2, grid_size+1)]
+#grids = [MMD.create_centered_grid(i) for i in range(2, grid_size+1)]
+grids = [MMD.create_centered_grid(4)]
 
 
 # #sample sizes
-x_sample_sizes = [50,100,200,500,1000]
-y_sample_sizes = [50,100,200,500,1000]
+# x_sample_sizes = [50,100,200,500,1000]
+# y_sample_sizes = [50,100,200,500,1000]
 
+x_sample_sizes = [100]
+y_sample_sizes = [100]
 
 # true parameters
 #alpha_list = [0.1, 0.3, 0.7, 0.9]
 #p_list = [1.,2.,10.,1000.]
 
 alpha_list = [3.]
-p_list = [4.]
+p_list = [1.5]
 
 # bandwidth
 b_list = ["AUTO"]
 
 # number number iterations
-nr_iterations = 2500
+nr_iterations = 1000
 
 b_update=100
 
@@ -120,7 +123,7 @@ for b_value in b_list:
 
                                 #setup the parameters to optimize
                                 alpha_hat = torch.tensor([1.]).to(device).requires_grad_()
-                                p_hat = torch.tensor([2.]).to(device).requires_grad_()
+                                p_hat = torch.tensor([1.]).to(device).requires_grad_()
                         
                                 # setup optimizer
                                 optimizer = torch.optim.Adam([alpha_hat, p_hat], lr=lr)
@@ -128,8 +131,9 @@ for b_value in b_list:
                                 #setup Vario object to optimize
                                 Vario = MMD.Vario(alpha_hat,p_hat)
 
+                                
 
-                                simulated_df = MMD.training_loop_huesler_reis(Vario, y, grid, nr_iterations , x_sample_size, device, b, optimizer, epoch_print_size=500, b_update=b_update)
+                                simulated_df = MMD.training_loop_huesler_reis(Vario, y, grid, nr_iterations , x_sample_size, device, b, optimizer, epoch_print_size=50, b_update=b_update)
 
 
                                 
@@ -158,9 +162,31 @@ for b_value in b_list:
 
 
 #%%
+simulated_df
+#%%
+print(f"{folder_name}/{file_name}.csv")
+#%%
+simulated_df
+#%%
+#%%
+simulated_df
+#%%
+#%%
 
-vario.alpha = 10
+#%%
+#%%
 
+#%%
+#%%
+
+#%%
+#%%
+
+#%%
+#%%
+
+
+#%%
 #%%
 
 #%%

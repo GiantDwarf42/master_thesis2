@@ -797,18 +797,40 @@ class Vario:
 
 
     def __str__(self):
-        return f"Vario(alpha={self.alpha.item()}, p={self.p.item()})"
+        return f"Vario(alpha={self._alpha}, p={self._p})"
     
     def __repr__(self):
-        return f"Vario(alpha={self.alpha.item()}, p={self.p.item()})"
+        return f"Vario(alpha={self._alpha}, p={self._p})"
     
 
-    def vario(self, x):
+    # def vario(self, x):
      
         
-        norm = self._alpha * (torch.sum(x**self._p, dim=-1))**(1/self._p)
+    #     norm = self._alpha * (torch.sum(x**self._p, dim=-1))**(1/self._p)
 
-        return norm 
+    #     return norm
+
+    # def vario(self, x):
+        
+    #     x_p = torch.pow(x, self._p)
+        
+    #     norm = self._alpha * torch.pow(torch.sum(x_p, dim=-1),1/self._p)
+
+    #     return norm 
+
+    # def vario(self, x):
+    #     print(f"Input x: {x}")
+    #     sum_x_p = torch.sum(x**self._p, dim=-1)
+    #     print(f"Sum x**p: {sum_x_p}")
+    #     norm = self._alpha * (sum_x_p)**(1/self._p)
+    #     print(f"Norm: {norm}")
+    #     return norm 
+    
+    def vario(self,x):
+         
+         norm = self._alpha * torch.sqrt(torch.sum(x**2, dim=-1))**self._p
+
+         return norm
 
 
 def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_size, device, b, optimizer, epoch_print_size=500, b_update=0):
@@ -841,7 +863,7 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
                 MMD_yy_case = MMD_equal_case(target_dist,device,b)
 
 
-        print(Vario)
+        
         # Empty gradient
         optimizer.zero_grad()
 
@@ -855,15 +877,24 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
         #loss
         loss = MMD_xx_case + MMD_yy_case - MMD_xy_case
 
+        # print(Vario)
+        # print(Vario.alpha.grad)
+        # print(Vario.p.grad)
         
         #optimizer.zero_grad()
         # Calculate gradient
         loss.backward()
         
+        # Gradient clipping
+        #torch.nn.utils.clip_grad_norm_([Vario.alpha, Vario.p], max_norm=1.0)
         # Take one SGD step
+        # print(Vario)
+        # print(Vario.alpha.grad)
+        # print(Vario.p.grad)
+
         optimizer.step()
 
-        print(Vario)
+        #print(Vario)
 
         
 
@@ -874,6 +905,20 @@ def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_
         #         alpha_hat.copy_(torch.tensor(0.01))
         #     elif alpha_hat >= 1:
         #         alpha_hat.copy_(torch.tensor(0.99))
+
+        
+        with torch.no_grad():
+            if Vario.alpha <= 0:
+                Vario.alpha.copy_(torch.tensor(0.01))
+                  
+            elif Vario.p <= 0:
+                 Vario.p.copy_(torch.tensor(0.01))
+            
+            elif Vario.p > 2:
+                 Vario.p.copy_(torch.tensor(1.99))
+
+            
+             
 
         
 
