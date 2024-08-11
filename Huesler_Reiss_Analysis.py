@@ -184,32 +184,35 @@ df_last_150_aggregated_index_reset
 # %%
 # ### Y sample size effect
 
-
 #%%
 
 # go through the different simulation runs => 180
 counter = 0
 # Iterate through each combination of index levels
-for mu, sigma, b in param_combinations:
+for grid, alpha, p in param_combinations:
 
-	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["mu"]==mu) 
-						     & (df_last_150_aggregated_index_reset["sigma"]==sigma) 
-						     & (df_last_150_aggregated_index_reset["b"]==b)]
+	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["grid"]==grid) 
+						     & (df_last_150_aggregated_index_reset["p"]==p) 
+						     & (df_last_150_aggregated_index_reset["alpha"]==alpha)]
 	
 	# Reset the multi-index and flatten the columns
 	simulations_df = simulations_df.reset_index()
 	simulations_df.columns = ['_'.join(filter(None, col)).strip() for col in simulations_df.columns.values]
 
+	
 	# Rename the columns for easier access
-	simulations_df.rename(columns={
-	'ysize_': 'ysize',
-	'xsize_': 'xsize',
-	'mu_hat_mean': 'mu_hat_mean',
-	'sigma_hat_mean': 'sigma_hat_mean'
-	}, inplace=True)
+	
+	# simulations_df.rename(columns={
+	# 'ysize_': 'ysize',
+	# 'xsize_': 'xsize',
+	# 'alpha_hat_mean': 'alpha_hat_mean',
+	# 'p_hat_mean': 'p_hat_mean'
+	# }, inplace=True)
+
+	
 
 	# Melt the DataFrame to long format for easier plotting with seaborn
-	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['mu_hat_mean', 'sigma_hat_mean'], 
+	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['alpha_hat_mean', 'p_hat_mean'], 
 			var_name='Type', value_name='Mean')
 
 	# Create a FacetGrid for separate violin plots by xsize
@@ -220,8 +223,8 @@ for mu, sigma, b in param_combinations:
 
 	# Add horizontal lines to each subplot
 	for ax in g.axes.flat:
-		ax.axhline(y=simulations_df["mu"].iloc[0], color='blue', linestyle='--', linewidth=1)
-		ax.axhline(y=simulations_df["sigma"].iloc[0], color='orange', linestyle='-', linewidth=1)
+		ax.axhline(y=simulations_df["alpha"].iloc[0], color='blue', linestyle='--', linewidth=1)
+		ax.axhline(y=simulations_df["p"].iloc[0], color='orange', linestyle='-', linewidth=1)
 
 	# Get handles and labels from the first axis
 	handles, labels = g.axes.flat[0].get_legend_handles_labels()
@@ -229,71 +232,7 @@ for mu, sigma, b in param_combinations:
 	# Replace old labels with LaTeX formatted ones
 
 	
-	new_labels = [r'$\hat{\mu}$' if label == 'mu_hat_mean' else r'$\hat{\sigma}$' for label in labels]
-
-	# Manually add the new legend
-	# Create a new legend with the handles and updated labels
-	for ax in g.axes.flat:
-		ax.legend(handles=handles, labels=new_labels, title='Parameter')
-
-	# Set titles and axis labels
-	g.set_axis_labels('response sample size', 'Parameter Values')
-	g.set_titles(col_template='simulations distribution sample size : {col_name}')
-
-	# Adjust the main title
-	plt.subplots_adjust(top=0.93)
-
-	mu_latex = r"$\mu$"
-	sigma_latex = r"$\sigma$"
-	g.figure.suptitle(f'Effect of the response sample size with  {mu_latex} = {mu}, {sigma_latex} = {sigma} and {b}')
-
-	file_name = f"mu{mu}_sigma{sigma}_{b}_yeffect"
-
-	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
-
-	plt.close()
-
-	counter += 1
-
-	print(f"created and saved {counter} figures")
-
-	
-# %%
-# go through the different simulation runs => 180
-counter = 0
-# Iterate through each combination of index levels
-for alpha, dim, b in param_combinations:
-
-	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["alpha"]==alpha) 
-						     & (df_last_150_aggregated_index_reset["dim"]==dim) 
-						     & (df_last_150_aggregated_index_reset["b"]==b)]
-	
-	# Reset the multi-index and flatten the columns
-	simulations_df = simulations_df.reset_index()
-	simulations_df.columns = ['_'.join(filter(None, col)).strip() for col in simulations_df.columns.values]
-
-	# # Melt the DataFrame to long format for easier plotting with seaborn
-	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['alpha_hat_mean'], 
-			var_name='Type', value_name='Mean')
-
-	# Create a FacetGrid for separate violin plots by xsize
-	g = sns.FacetGrid(df_long, col="xsize", col_wrap=3, sharey=True, height=5, aspect=1)
-
-	# Map the violinplot to the FacetGrid
-	g.map_dataframe(sns.violinplot, x='ysize', y='Mean', hue='Type', split=True, inner='quartile', palette='muted', alpha=0.5)
-
-	# Add horizontal lines to each subplot
-	for ax in g.axes.flat:
-		ax.axhline(y=alpha, color='blue', linestyle='--', linewidth=1)
-		
-
-	# Get handles and labels from the first axis
-	handles, labels = g.axes.flat[0].get_legend_handles_labels()
-
-	# Replace old labels with LaTeX formatted ones
-
-	
-	new_labels = [r'$\hat{\alpha}$'for label in labels]
+	new_labels = [r'$\hat{\alpha}$' if label == 'alpha_hat_mean' else r'$\hat{p}$' for label in labels]
 
 	# Manually add the new legend
 	# Create a new legend with the handles and updated labels
@@ -308,17 +247,17 @@ for alpha, dim, b in param_combinations:
 	plt.subplots_adjust(top=0.93)
 
 	alpha_latex = r"$\alpha$"
+	grid_name = f"{int(grid)}x{int(grid)}"
+	g.figure.suptitle(f'Effect of the response sample size with  {alpha_latex} = {alpha}, p = {p} and grid = {grid_name}')
 
-	g.figure.suptitle(f'Effect of the response sample size with  {alpha_latex} = {alpha}, dimension = {dim} and {b}')
-
-	file_name = f"alpha{alpha}_dim{dim}_{b}_yeffect"
+	file_name = f"alpha{alpha}_p{p}_grid{grid}_yeffect"
 
 	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
-	#plt.show()
 
 	plt.close()
 
 	counter += 1
+
 
 	print(f"created and saved {counter} figures")
 
@@ -333,26 +272,29 @@ for alpha, dim, b in param_combinations:
 
 # %%
 
-
-# %%
-# ### Y sample size effect
-
-# %%
 # go through the different simulation runs => 180
 counter = 0
 # Iterate through each combination of index levels
-for alpha, dim, b in param_combinations:
+for grid, alpha, p in param_combinations:
 
-	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["alpha"]==alpha) 
-						     & (df_last_150_aggregated_index_reset["dim"]==dim) 
-						     & (df_last_150_aggregated_index_reset["b"]==b)]
+	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["grid"]==grid) 
+						     & (df_last_150_aggregated_index_reset["alpha"]==alpha) 
+						     & (df_last_150_aggregated_index_reset["p"]==p)]
 	
 	# Reset the multi-index and flatten the columns
 	simulations_df = simulations_df.reset_index()
 	simulations_df.columns = ['_'.join(filter(None, col)).strip() for col in simulations_df.columns.values]
 
-	# # Melt the DataFrame to long format for easier plotting with seaborn
-	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['alpha_hat_mean'], 
+	# # Rename the columns for easier access
+	# simulations_df.rename(columns={
+	# 'ysize_': 'ysize',
+	# 'xsize_': 'xsize',
+	# 'mu_hat_mean': 'mu_hat_mean',
+	# 'sigma_hat_mean': 'sigma_hat_mean'
+	# }, inplace=True)
+
+	# Melt the DataFrame to long format for easier plotting with seaborn
+	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['alpha_hat_mean', 'p_hat_mean'], 
 			var_name='Type', value_name='Mean')
 
 	# Create a FacetGrid for separate violin plots by xsize
@@ -363,8 +305,8 @@ for alpha, dim, b in param_combinations:
 
 	# Add horizontal lines to each subplot
 	for ax in g.axes.flat:
-		ax.axhline(y=alpha, color='blue', linestyle='--', linewidth=1)
-		
+		ax.axhline(y=simulations_df["alpha"].iloc[0], color='blue', linestyle='--', linewidth=1)
+		ax.axhline(y=simulations_df["p"].iloc[0], color='orange', linestyle='-', linewidth=1)
 
 	# Get handles and labels from the first axis
 	handles, labels = g.axes.flat[0].get_legend_handles_labels()
@@ -372,37 +314,33 @@ for alpha, dim, b in param_combinations:
 	# Replace old labels with LaTeX formatted ones
 
 	
-	new_labels = [r'$\hat{\alpha}$'for label in labels]
+	new_labels = [r'$\hat{\alpha}$' if label == 'alpha_hat_mean' else r'$\hat{p}$' for label in labels]
 
 	# Manually add the new legend
 	# Create a new legend with the handles and updated labels
 	for ax in g.axes.flat:
 		ax.legend(handles=handles, labels=new_labels, title='Parameter')
 
-	
-
 	# Set titles and axis labels
 	g.set_axis_labels('simulation sample size', 'Parameter Values')
-	g.set_titles(col_template='response sample size : {col_name}')
+	g.set_titles(col_template='response sample size: {col_name}')
 
 	# Adjust the main title
 	plt.subplots_adjust(top=0.93)
 
 	alpha_latex = r"$\alpha$"
+	grid_name = f"{int(grid)}x{int(grid)}"
+	g.figure.suptitle(f'Effect of the simulation sample size with  {alpha_latex} = {alpha}, p = {p} and grid = {grid_name}')
 
-	g.figure.suptitle(f'Effect of the simulation sample size with  {alpha_latex} = {alpha}, dimension = {dim} and {b}')
-
-	file_name = f"alpha{alpha}_dim{dim}_{b}_xeffect"
+	file_name = f"alpha{alpha}_p{p}_grid{grid}_xeffect"
 
 	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
-	#plt.show()
 
 	plt.close()
 
 	counter += 1
 
 	print(f"created and saved {counter} figures")
-
 
 
 	
