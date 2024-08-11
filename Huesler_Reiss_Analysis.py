@@ -13,7 +13,7 @@ pd.options.display.max_rows = 500
 
 
 # %%
-load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Code2\Huesler_Reiss_processed_results_test\Data\Huesler_Reiss_Processed_data_test_duration.pkl"
+load_path = r"G:\My Drive\Studium\UNIGE_Master\Thesis\Master_Thesis\Code2\Huesler_Reiss_processed_results_test\Data\Huesler_Reiss_Processed_data_timeout.pkl"
 
 #loading the data
 
@@ -88,8 +88,8 @@ saving_path_result_data = f"G:/My Drive/Studium/UNIGE_Master/Thesis/Master_Thesi
 # %%
 
 data_output = df_last_150_proper_aggregation_index_reset
-data_output.to_pickle(f"{saving_path_result_data}/Huesler_Reiss_result_bAUTO.pkl")
-data_output.to_csv(f"{saving_path_result_data}/Huesler_Reiss_result_bAUTO.csv")
+data_output.to_pickle(f"{saving_path_result_data}/Huesler_Reiss_result.pkl")
+data_output.to_csv(f"{saving_path_result_data}/Huesler_Reiss_result.csv")
 
 # %% [markdown]
 # # Convergence plots b0.01 case
@@ -135,14 +135,16 @@ for grid, alpha, p, xsize, ysize in param_combinations:
     # Plot all lines for each ID
     for param_type, color in zip(["alpha_hat", "p_hat"], ["blue", "orange"]):
         subset = melted_df[melted_df["param_type"] == param_type]
-        sns.lineplot(data=subset, x='Iteration', y='param_value', units='ID', estimator=None, color=color, alpha=0.05)
+        sns.lineplot(data=subset, x='Iteration', y='param_value', units='ID', estimator=None, color=color, alpha=0.5)
     
     # Add horizontal reference lines for mu and sigma
     plt.axhline(y=alpha, color="blue", linestyle='-', label=r'$\hat\alpha$')
-    plt.axhline(y=p, color="orange", linestyle='-', label=r'$\hat\p$')
+    plt.axhline(y=p, color="orange", linestyle='-', label=r'$\hat{p}$')
     
     plt.ylabel("Parameter Value")
-    plt.title(f"Convergence plot with $\alpha$ = {alpha}, $p$ = {p} and grid = {grid}")
+    alpha_latex = r"$\alpha$"
+    grid_name = f"{int(grid)}x{int(grid)}"
+    plt.title(f"Convergence plot with {alpha_latex} = {alpha}, $p$ = {p} and grid = {grid_name}")
 
     # Adjust the legend
     handles, labels = plt.gca().get_legend_handles_labels()
@@ -154,54 +156,10 @@ for grid, alpha, p, xsize, ysize in param_combinations:
     plt.close()
 
     counter += 1
+
     print(f"created and saved {counter} figures")
    
 #%%
-
-#%%
-# %%
-counter = 0
-for alpha, dim, b, xsize, ysize in param_combinations:
-    simulations_df = df[(df["alpha"]==alpha) & (df["dim"]==dim) 
-		     & (df["b"]==b) & (df["xsize"]==xsize) & (df["ysize"]==ysize)]
-	
-    melted_df = simulations_df.melt(id_vars=["ID", "Iteration"],
-		    value_vars=["alpha_hat"],
-		    var_name = "param_type",
-		    value_name = "param_value")
-    
-
-    # Initialize the plot
-    plt.figure(figsize=(10, 6))
-    
-    # Plot all lines for each ID
-    for param_type, color in zip(["alpha_hat"], ["blue"]):
-        subset = melted_df[melted_df["param_type"] == param_type]
-        sns.lineplot(data=subset, x='Iteration', y='param_value', units='ID', estimator=None, color=color, alpha=0.1)
-    
-    # Add horizontal reference lines for mu and sigma
-    plt.axhline(y=alpha, color="blue", linestyle='-', label=r'$\hat\alpha$')
-    
-    
-    plt.ylabel("Parameter Value")
-
-    alpha_symbol = r'$\alpha$'
-    plt.title(f"Convergence plot with {alpha_symbol} = {alpha}, dimension {dim} and {b}")
-
-    # Adjust the legend
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), title='Parameter')
-    
-    file_name = f"alpha{alpha}_dim{dim}_b{b}_xsize{xsize}_ysize{ysize}.png"
-    plt.savefig(f"{saving_path_convergence}/{file_name}")
-    #plt.show()
-    plt.close()
-
-    counter += 1
-    print(f"created and saved {counter} figures")
-
-########################################################################
 
 # %%
 
@@ -210,25 +168,96 @@ for alpha, dim, b, xsize, ysize in param_combinations:
 # # Violin Charts
 
 # %%
-saving_path_sample_size_effect = r"/home/users/k/kipfer2/Logistic_processed_results/violin_charts"
+saving_path_sample_size_effect = r"G:/My Drive/Studium/UNIGE_Master/Thesis/Master_Thesis/Code2/Huesler_Reiss_processed_results_test/violin_charts"
 
 # %%
 df_last_150_aggregated_index_reset = df_last_150_aggregated.reset_index()
 
 # %%
-param_combinations = df_last_150_aggregated_index_reset.groupby(["alpha", "dim", "b"]).groups.keys()
+param_combinations = df_last_150_aggregated_index_reset.groupby(["grid", "alpha", "p"]).groups.keys()
 param_combinations
 
 # %%
 df_last_150_aggregated_index_reset
 
-# %% [markdown]
-# # ysample size
-# 
 
 # %%
 # ### Y sample size effect
 
+
+#%%
+
+# go through the different simulation runs => 180
+counter = 0
+# Iterate through each combination of index levels
+for mu, sigma, b in param_combinations:
+
+	simulations_df = df_last_150_aggregated_index_reset[(df_last_150_aggregated_index_reset["mu"]==mu) 
+						     & (df_last_150_aggregated_index_reset["sigma"]==sigma) 
+						     & (df_last_150_aggregated_index_reset["b"]==b)]
+	
+	# Reset the multi-index and flatten the columns
+	simulations_df = simulations_df.reset_index()
+	simulations_df.columns = ['_'.join(filter(None, col)).strip() for col in simulations_df.columns.values]
+
+	# Rename the columns for easier access
+	simulations_df.rename(columns={
+	'ysize_': 'ysize',
+	'xsize_': 'xsize',
+	'mu_hat_mean': 'mu_hat_mean',
+	'sigma_hat_mean': 'sigma_hat_mean'
+	}, inplace=True)
+
+	# Melt the DataFrame to long format for easier plotting with seaborn
+	df_long = pd.melt(simulations_df, id_vars=['ysize', 'xsize'], value_vars=['mu_hat_mean', 'sigma_hat_mean'], 
+			var_name='Type', value_name='Mean')
+
+	# Create a FacetGrid for separate violin plots by xsize
+	g = sns.FacetGrid(df_long, col="xsize", col_wrap=3, sharey=True, height=5, aspect=1)
+
+	# Map the violinplot to the FacetGrid
+	g.map_dataframe(sns.violinplot, x='ysize', y='Mean', hue='Type', split=True, inner='quartile', palette='muted', alpha=0.5)
+
+	# Add horizontal lines to each subplot
+	for ax in g.axes.flat:
+		ax.axhline(y=simulations_df["mu"].iloc[0], color='blue', linestyle='--', linewidth=1)
+		ax.axhline(y=simulations_df["sigma"].iloc[0], color='orange', linestyle='-', linewidth=1)
+
+	# Get handles and labels from the first axis
+	handles, labels = g.axes.flat[0].get_legend_handles_labels()
+
+	# Replace old labels with LaTeX formatted ones
+
+	
+	new_labels = [r'$\hat{\mu}$' if label == 'mu_hat_mean' else r'$\hat{\sigma}$' for label in labels]
+
+	# Manually add the new legend
+	# Create a new legend with the handles and updated labels
+	for ax in g.axes.flat:
+		ax.legend(handles=handles, labels=new_labels, title='Parameter')
+
+	# Set titles and axis labels
+	g.set_axis_labels('response sample size', 'Parameter Values')
+	g.set_titles(col_template='simulations distribution sample size : {col_name}')
+
+	# Adjust the main title
+	plt.subplots_adjust(top=0.93)
+
+	mu_latex = r"$\mu$"
+	sigma_latex = r"$\sigma$"
+	g.figure.suptitle(f'Effect of the response sample size with  {mu_latex} = {mu}, {sigma_latex} = {sigma} and {b}')
+
+	file_name = f"mu{mu}_sigma{sigma}_{b}_yeffect"
+
+	plt.savefig(f"{saving_path_sample_size_effect}/{file_name}.png")
+
+	plt.close()
+
+	counter += 1
+
+	print(f"created and saved {counter} figures")
+
+	
 # %%
 # go through the different simulation runs => 180
 counter = 0
@@ -295,7 +324,9 @@ for alpha, dim, b in param_combinations:
 
 
 
-	
+
+
+#######################################################################
 
 # %% [markdown]
 # # xsample size effect
