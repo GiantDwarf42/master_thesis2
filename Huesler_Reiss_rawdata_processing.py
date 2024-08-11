@@ -18,8 +18,8 @@ from collections import defaultdict
 
 # %%
 # Step 1: Specify the directory containing the CSV files
-directory = r'/home/users/k/kipfer2/Logistic_output'
-
+#directory = r'/home/users/k/kipfer2/Huesler_Reis_test_duration'
+directory = r"/home/users/k/kipfer2/Huesler_Reis_output_300min_timeout"
 
 # %%
 
@@ -56,15 +56,17 @@ for key, files in file_groups.items():
         
         # Extract components from the filename
         parts = file.split('_')
-
+        
         components = {
-            'alpha': np.repeat(float(parts[0][5:]), df.shape[0]),
-            'dim':np.repeat(int(parts[1][3:]),df.shape[0]),
-            'b': np.repeat(parts[2],df.shape[0]),
+            'grid': np.repeat(float(parts[0][4:]), df.shape[0]),
+            'alpha':np.repeat(float(parts[1][5:]),df.shape[0]),
+            'p': np.repeat(parts[2],df.shape[0]),
             'xsize': np.repeat(int(parts[3][5:]),df.shape[0]),
             'ysize': np.repeat(int(parts[4][5:]),df.shape[0]),
             'ID': np.repeat(int(parts[5].split('.')[0][2:]),df.shape[0])  # Remove the .csv part
         }
+
+    
 
         flag_df = pd.DataFrame.from_dict(components)
 
@@ -105,13 +107,13 @@ stacked_dataframes.info()
 
 # %%
 # 5 step: safe the processed DataFrame
-file_name = f"Logistic_Processed_data"
-saving_path = r"/home/users/k/kipfer2/Logistic_processed_results/Data"
+file_name = f"Huesler_Reiss_Processed_data_timeout"
+saving_path = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_test"
 
-stacked_dataframes.to_csv(f"{saving_path}\{file_name}.csv")
+stacked_dataframes.to_csv(f"{saving_path}/{file_name}.csv")
 
 # %%
-stacked_dataframes.to_pickle(f"{saving_path}\{file_name}.pkl")
+stacked_dataframes.to_pickle(f"{saving_path}/{file_name}.pkl")
 
 # %%
 

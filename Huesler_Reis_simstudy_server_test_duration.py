@@ -33,9 +33,9 @@ def main(task_id):
 
     #%%
 
-
+    
     #%%
-    folder_name= "Huesler_Reis_output"
+    folder_name= "Huesler_Reis_test_duration"
     lr = 0.01
 
     #%%
@@ -47,14 +47,14 @@ def main(task_id):
 
 
     # #sample sizes
-    x_sample_sizes = [50,100,200,500,1000]
-    y_sample_sizes = [50,100,200,500,1000]
+    x_sample_sizes = [1000]
+    y_sample_sizes = [1000]
 
 
     # true parameters
 
-    alpha_list = [2., 5., 10.]
-    p_list = [0.5, 1., 1.5, 2]
+    alpha_list = [5.]
+    p_list = [1.5]
 
     # bandwidth
     b_list = ["AUTO"]
@@ -81,7 +81,7 @@ def main(task_id):
                                 
                                 grid_size = np.sqrt(grid.shape[0])
 
-                                file_name = f"grid{grid_size}_alpha{alpha}_p{p}_xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
+                                file_name = f"grid{int(grid_size)}_alpha{int(alpha)}_p{p}_xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
 
                                 # setup variogram
                                 Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
