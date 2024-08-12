@@ -420,29 +420,29 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
 
     return res
 
-def sim_huesler_reis(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1.):
+def sim_huesler_reiss(coord, Vario, device, loc=1., scale=1., shape=1., no_simu=1.):
 
     N = coord.shape[0]
 
     if isinstance(loc, float):
 
-        loc = torch.tensor(np.repeat(loc, N), requires_grad=True)
+        loc = torch.tensor(np.repeat(loc, N))
         loc = loc.to(device)
      
 
     if isinstance(scale, float):
 
-        scale = torch.tensor(np.repeat(scale, N), requires_grad=True)
+        scale = torch.tensor(np.repeat(scale, N))
         scale = scale.to(device)
 
     if isinstance(shape, float):
 
-        shape = torch.tensor(np.repeat(shape, N), requires_grad=True)
+        shape = torch.tensor(np.repeat(shape, N))
         shape = shape.to(device)
 
     assert torch.all(scale > 1e-12), f"Not all elements in 'scale' {scale} are greater than 1e-12"
 
-    assert callable(vario), f" vario must be a function"
+    #assert callable(vario), f" vario must be a function"
 
 	# calculate the covariance matrix
 	# Compute pairwise differences using broadcasting
@@ -451,10 +451,10 @@ def sim_huesler_reis(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1
     diff = coord_i - coord_j  # Shape (N, N, 2)
 
     # Apply the vario function
-    vario_diff = vario(diff)  # Shape (N, N)
+    vario_diff = Vario.vario(diff)  # Shape (N, N)
 
     # Apply the vario function to the original coordinates
-    vario_coord = vario(coord)  # Shape (N,)
+    vario_coord = Vario.vario(coord)  # Shape (N,)
 
     # Compute the covariance matrix
     cov_mat = vario_coord.unsqueeze(1) + vario_coord.unsqueeze(0) - vario_diff
