@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import time
 from scipy.stats import genextreme
+import matplotlib.pyplot as plt
 
 
 def kernel_gauss_cdist(cdist:torch.tensor, b:int=1)->torch.tensor:
@@ -57,6 +58,18 @@ def calc_b_heuristic(y:torch.tensor, n:int, case:str, device, params:dict)->torc
 
             x = sample_multivariate_logistic(n,y.shape[1], params["alpha"], device)
             b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
+
+    elif case == "huesler_reis":
+        
+        grid = params["grid"]
+
+        Vario = params["Vario"]
+
+
+        x = sim_huesler_reis_ext(grid, Vario, device, no_simu=n)
+        
+        b = 1/ torch.median(torch.cdist(x,y,p=2)**2)
+         
 
     return b
 
@@ -319,37 +332,10 @@ def sample_multivariate_logistic(n:int, m:int, alpha:float, device)->torch.tenso
     # simulate from a positive stable distribution
     S = sample_PS(n, m, alpha, device)
 
-    # Test samplig alternative
-    #S = sample_PS_scipy(n, m, alpha, device)
-
-
-    # # Step 1.5:
-    # # trying to prevent inf and 0 values
-
-    # # Define the max float and tiny value for torch.float64
-    # max_float = np.finfo(np.float64).max / 10000
-    # tiny_float = np.finfo(np.float64).tiny * 10000
-
-    # # # Replace inf and -inf with max_float
-    # S = torch.where(torch.isinf(S), torch.tensor(max_float, dtype=torch.float64), S)
-
-    # # # Replace 0 with tiny_float
-    # S = torch.where(S == 0.0, torch.tensor(tiny_float, dtype=torch.float64), S)
-
-
     # Step 2:
     # sample random standard exponential variables independent of S
     W = torch.zeros([n,m]).exponential_(lambd=1).to(device)
     X = (S/W)**alpha
-
-
-
-    # Replace inf and -inf with max_float
-    #X = torch.where(torch.isinf(X), torch.tensor(max_float, dtype=torch.float64), X)
-
-    # Replace 0 with tiny_float
-    #X = torch.where(X == 0.0, torch.tensor(tiny_float, dtype=torch.float64), X)
-    # check for inf and check for inf and neginf, also if 0 is an issue
 
     return X
 
@@ -395,49 +381,6 @@ def sample_PS(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
     return S
 
 
-def sample_PS_scipy(n:int, m:int, alpha:torch.Tensor, device)-> torch.Tensor:
-
-    # get uniform distribution
-    U = torch.zeros([n,1]).uniform_(0,torch.pi).to(device)
-    
-    # get the exponent or c value (evi)
-    exponent = (1-alpha)/alpha
-
-    # location and scale provided by Flo
-    loc = 1
-    scale = 1
-    
-    print(type(exponent))
-
-    if isinstance(exponent, torch.Tensor):
-
-        exponent_value = exponent.detach().numpy()
-
-    else:
-        exponent_value = exponent
-
-    # sample from Frèchet distribution
-
-    if exponent_value <= 0:
-        exponent_value = 0.01
-    F = genextreme.rvs(exponent_value, loc=loc, scale=scale, size=[n,1])
-
-    # make torch tensor
-    F_tensor = torch.Tensor(F).to(device)
-
-
-    A = torch.sin((1-alpha)*U)
-
-    comp1 = A**exponent * F_tensor
-
-    comp2 = torch.sin(alpha*U)/(torch.sin(U)**(1-alpha))
-    
-    S =  comp1 * comp2
-
-    S = S.repeat(1,m)
-
-    return S
-
 
 def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
 
@@ -458,10 +401,6 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
         trend = torch.tensor(trend)
 
     # Apply trend and calculate exponentiated results
-    print(trend.shape)
-    print(trend)
-    print(res.shape)
-    print(res)
     if trend.dim() == 1:
             #res = torch.exp((res.t() - trend).t())
 
@@ -481,29 +420,29 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
 
     return res
 
-def sim_huesler_reis(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1.):
+def sim_huesler_reiss(coord, Vario, device, loc=1., scale=1., shape=1., no_simu=1.):
 
     N = coord.shape[0]
 
     if isinstance(loc, float):
 
-        loc = torch.tensor(np.repeat(loc, N), requires_grad=True)
+        loc = torch.tensor(np.repeat(loc, N))
         loc = loc.to(device)
      
 
     if isinstance(scale, float):
 
-        scale = torch.tensor(np.repeat(scale, N), requires_grad=True)
+        scale = torch.tensor(np.repeat(scale, N))
         scale = scale.to(device)
 
     if isinstance(shape, float):
 
-        shape = torch.tensor(np.repeat(shape, N), requires_grad=True)
+        shape = torch.tensor(np.repeat(shape, N))
         shape = shape.to(device)
 
     assert torch.all(scale > 1e-12), f"Not all elements in 'scale' {scale} are greater than 1e-12"
 
-    assert callable(vario), f" vario must be a function"
+    #assert callable(vario), f" vario must be a function"
 
 	# calculate the covariance matrix
 	# Compute pairwise differences using broadcasting
@@ -512,10 +451,10 @@ def sim_huesler_reis(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1
     diff = coord_i - coord_j  # Shape (N, N, 2)
 
     # Apply the vario function
-    vario_diff = vario(diff)  # Shape (N, N)
+    vario_diff = Vario.vario(diff)  # Shape (N, N)
 
     # Apply the vario function to the original coordinates
-    vario_coord = vario(coord)  # Shape (N,)
+    vario_coord = Vario.vario(coord)  # Shape (N,)
 
     # Compute the covariance matrix
     cov_mat = vario_coord.unsqueeze(1) + vario_coord.unsqueeze(0) - vario_diff
@@ -591,3 +530,357 @@ def sim_huesler_reis(coord, vario, device, loc=0., scale=1., shape=1., no_simu=1
 	#  	"counter": counter}
 
     return res_transformed
+
+
+def sim_huesler_reis_ext(coord, Vario, device, loc=1., scale=1., shape=1., no_simu=1):
+
+	assert isinstance(coord, torch.Tensor), f"coord must be a torch.tensor but is a {type(coord)}"
+
+	N = coord.shape[0]
+
+	if isinstance(loc, float):
+
+		loc = torch.tensor(np.repeat(loc, N), device=device)
+		
+     
+
+	if isinstance(scale, float):
+
+		scale = torch.tensor(np.repeat(scale, N), device=device)
+		
+
+	if isinstance(shape, float):
+
+		shape = torch.tensor(np.repeat(shape, N), device=device)
+		
+
+	assert torch.all(scale > 1e-12), f"all scale values must be bigger than 1e-12"
+
+
+	# Compute covariance matrix using broadcasting
+	coord_i = coord.unsqueeze(1)  # Shape (N, 1, d)
+	coord_j = coord.unsqueeze(0)  # Shape (1, N, d)
+	cov_matrix = Vario.vario(coord_i) + Vario.vario(coord_j) - Vario.vario(coord_i - coord_j)
+	cov_matrix += 1e-6  # Add small constant for numerical stability
+
+	# cholevski decomposition for upper triangular matrix
+	chol_mat = torch.linalg.cholesky(cov_matrix, upper=True)
+
+
+	# Initialize a zero matrix res with shape (no_simu, N)
+	res = torch.zeros((no_simu, N))
+
+
+	# Initialize a zero vector counter with length no_simu
+	counter = torch.zeros(no_simu, dtype=torch.int)
+
+	for k in range(N):
+
+		# create additional exponential term
+		# random component
+		poisson = torch.zeros(no_simu).exponential_(lambd=1).to(device)
+		#poisson = torch.ones(no_simu).to(device)
+
+		trend = Vario.vario(coord -coord[k])
+
+		while torch.any(1 / poisson > res[:, k]):
+			ind = 1 / poisson > res[:, k]
+			n_ind = ind.sum().item()
+			idx = torch.arange(no_simu)[ind]
+			counter[ind] += 1
+
+			proc = simu_px_brownresnick(no_simu=n_ind, idx=torch.tensor([k]), N=N, trend=trend, chol_mat=chol_mat)
+			
+			assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
+
+
+			if k == 1:
+
+				ind_upd = torch.tensor(np.repeat(True, n_ind))
+			else:
+				ind_upd = torch.tensor([torch.all(1 / poisson[idx[i]] * proc[i, :k] <= res[idx[i], :k]) for i in range(n_ind)])
+
+			if ind_upd.any():
+				idx_upd = idx[ind_upd]
+				res[idx_upd, :] = torch.maximum(res[idx_upd, :], 1 / poisson[idx_upd].unsqueeze(1) * proc[ind_upd, :])
+
+			#this is random
+			poisson[ind] = poisson[ind] + torch.zeros(n_ind).exponential_(lambd=1)
+			#poisson[ind] = poisson[ind] + torch.ones(n_ind)
+
+	
+	# Apply final transformation
+	res_transformed = torch.where(
+		torch.abs(shape) < 1e-12,
+		torch.log(res) * scale.unsqueeze(0) + loc.unsqueeze(0),
+		(1 / shape.unsqueeze(0)) * (res ** shape.unsqueeze(0) - 1) * scale.unsqueeze(0) + loc.unsqueeze(0)
+    )
+
+	return res_transformed
+
+
+def sim_huesler_reis_ext_safety(coord, vario, device, loc=1., scale=1., shape=1., no_simu=1):
+
+	assert isinstance(coord, torch.Tensor), f"coord must be a torch.tensor but is a {type(coord)}"
+
+	N = coord.shape[0]
+
+	if isinstance(loc, float):
+
+		loc = torch.tensor(np.repeat(loc, N), device=device)
+		
+     
+
+	if isinstance(scale, float):
+
+		scale = torch.tensor(np.repeat(scale, N), device=device)
+		
+
+	if isinstance(shape, float):
+
+		shape = torch.tensor(np.repeat(shape, N), device=device)
+		
+
+	assert torch.all(scale > 1e-12), f"all scale values must be bigger than 1e-12"
+
+	assert callable(vario), f"vario must be a function" 
+
+	# Compute covariance matrix using broadcasting
+	coord_i = coord.unsqueeze(1)  # Shape (N, 1, d)
+	coord_j = coord.unsqueeze(0)  # Shape (1, N, d)
+	cov_matrix = vario(coord_i) + vario(coord_j) - vario(coord_i - coord_j)
+	cov_matrix += 1e-6  # Add small constant for numerical stability
+
+	# cholevski decomposition for upper triangular matrix
+	chol_mat = torch.linalg.cholesky(cov_matrix, upper=True)
+
+
+	# Initialize a zero matrix res with shape (no_simu, N)
+	res = torch.zeros((no_simu, N))
+
+
+	# Initialize a zero vector counter with length no_simu
+	counter = torch.zeros(no_simu, dtype=torch.int)
+
+	for k in range(N):
+
+		# create additional exponential term
+		# random component
+		poisson = torch.zeros(no_simu).exponential_(lambd=1).to(device)
+		#poisson = torch.ones(no_simu).to(device)
+
+		trend = vario(coord -coord[k])
+
+		while torch.any(1 / poisson > res[:, k]):
+			ind = 1 / poisson > res[:, k]
+			n_ind = ind.sum().item()
+			idx = torch.arange(no_simu)[ind]
+			counter[ind] += 1
+
+			proc = simu_px_brownresnick(no_simu=n_ind, idx=torch.tensor([k]), N=N, trend=trend, chol_mat=chol_mat)
+			
+			assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
+
+
+			if k == 1:
+
+				ind_upd = torch.tensor(np.repeat(True, n_ind))
+			else:
+				ind_upd = torch.tensor([torch.all(1 / poisson[idx[i]] * proc[i, :k] <= res[idx[i], :k]) for i in range(n_ind)])
+
+			if ind_upd.any():
+				idx_upd = idx[ind_upd]
+				res[idx_upd, :] = torch.maximum(res[idx_upd, :], 1 / poisson[idx_upd].unsqueeze(1) * proc[ind_upd, :])
+
+			#this is random
+			poisson[ind] = poisson[ind] + torch.zeros(n_ind).exponential_(lambd=1)
+			#poisson[ind] = poisson[ind] + torch.ones(n_ind)
+
+	
+	# Apply final transformation
+	res_transformed = torch.where(
+		torch.abs(shape) < 1e-12,
+		torch.log(res) * scale.unsqueeze(0) + loc.unsqueeze(0),
+		(1 / shape.unsqueeze(0)) * (res ** shape.unsqueeze(0) - 1) * scale.unsqueeze(0) + loc.unsqueeze(0)
+    )
+
+	return res_transformed
+     
+
+
+def create_centered_grid(size):
+    """
+    Create a centered grid with the given size.
+    
+    Args:
+    size (int): The size of the grid (e.g., 2 for a 2x2 grid, 3 for a 3x3 grid, etc.).
+    
+    Returns:
+    torch.Tensor: A tensor of shape (size*size, 2) representing the grid coordinates.
+    """
+    # Generate linear space from -1 to 1 with the specified size
+    linear_space = torch.linspace(-1, 1, size)
+    
+    # Create the meshgrid from the linear space
+    x, y = torch.meshgrid(linear_space, linear_space, indexing='ij')
+    
+    # Combine x and y coordinates into a single tensor and reshape it to the desired format
+    grid = torch.stack([x, y], dim=-1).reshape(-1, 2)
+    
+    return grid
+
+
+def plot_grid(grid):
+    """
+    Plot the grid points using a scatter plot.
+    
+    Args:
+    grid (torch.Tensor): The grid tensor of shape (n*n, 2).
+    title (str): The title of the plot.
+    """
+    # Convert the tensor to a numpy array for plotting
+    grid_np = grid.numpy()
+    
+    grid_size = np.sqrt(grid.shape[0]).item()
+
+    # Create the scatter plot
+    plt.scatter(grid_np[:, 0], grid_np[:, 1], marker='o')
+    plt.title(f"{grid_size}x{grid_size} Grid")
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.grid(True)
+    plt.axhline(0, color='grey', linestyle='--', linewidth=0.5)
+    plt.axvline(0, color='grey', linestyle='--', linewidth=0.5)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
+class Vario:
+     
+    def __init__(self, alpha, p):
+        
+        self._alpha = alpha
+        self._p = p
+
+    @property
+    def alpha(self):
+         
+         return self._alpha
+    
+    @alpha.setter
+    def alpha(self, new_alpha):
+         
+         self._alpha = new_alpha
+
+    @property
+    def p(self):
+         
+        return self._p
+    
+    @p.setter
+    def p(self, new_p):
+         
+         self._p = new_p
+
+
+
+    def __str__(self):
+        return f"Vario(alpha={self._alpha}, p={self._p})"
+    
+    def __repr__(self):
+        return f"Vario(alpha={self._alpha}, p={self._p})"
+    
+    
+    def vario(self,x):
+         
+         norm = self._alpha * torch.sqrt(torch.sum(x**2, dim=-1))**self._p
+
+         return norm
+
+
+def training_loop_huesler_reis(Vario, target_dist, grid, nr_iterations , sample_size, device, b, optimizer, epoch_print_size=500, b_update=0):
+   
+    alpha_hat_estimates = []
+    p_hat_estimates = []
+    MMD_values = []
+    b_values = []
+
+    times = []
+    start_time = time.time()
+
+    #the MMD yy case is a constant.
+    # no need to recalculate this for every epoch
+    MMD_yy_case = MMD_equal_case(target_dist,device,b)
+    
+    for epoch in np.arange(nr_iterations):
+
+        #iterative update of bandwidth value
+        if b_update:
+
+            if epoch % b_update == 0:
+
+                params = {"Vario": Vario,
+                          "grid": grid}
+                
+
+                b = calc_b_heuristic(target_dist, sample_size, "huesler_reis", device, params).item()
+
+                MMD_yy_case = MMD_equal_case(target_dist,device,b)
+
+
+        
+        # Empty gradient
+        optimizer.zero_grad()
+
+        # Sample from the generator
+        sample = sim_huesler_reis_ext(grid, Vario, device, no_simu=sample_size)
+        # Calculate Loss
+
+        # sample case
+        MMD_xx_case = MMD_equal_case(sample, device, b)
+        MMD_xy_case = MMD_mixed_case(sample,target_dist,device, b)
+        #loss
+        loss = MMD_xx_case + MMD_yy_case - MMD_xy_case
+
+        # Calculate gradient
+        loss.backward()
+        
+       
+        optimizer.step()
+  
+
+        
+        with torch.no_grad():
+            if Vario.alpha <= 0:
+                Vario.alpha.copy_(torch.tensor(0.01))
+                  
+            elif Vario.p <= 0:
+                 Vario.p.copy_(torch.tensor(0.01))
+            
+            elif Vario.p > 2:
+                 Vario.p.copy_(torch.tensor(1.99))
+
+
+        alpha_hat_estimates.append(Vario.alpha.detach().clone())
+        p_hat_estimates.append(Vario.p.detach().clone())
+        MMD_values.append(loss.detach().clone())
+        b_values.append(b)
+        times.append(time.time()-start_time)
+
+
+        if epoch_print_size:
+            if epoch%epoch_print_size==0:
+                print("epoch: ",epoch," loss=",loss)
+            
+    alpha_hat_estimates = torch.stack(alpha_hat_estimates).detach().numpy().reshape([nr_iterations,])
+    p_hat_estimates = torch.stack(p_hat_estimates).detach().numpy().reshape([nr_iterations,])
+    MMD_values = torch.stack(MMD_values).detach().numpy()
+
+    df_results = pd.DataFrame({"alpha_hat": alpha_hat_estimates,
+                               "p_hat": p_hat_estimates,
+                                "MMD": MMD_values,
+                                "b": b_values,
+                                "time": times})
+    
+    return df_results

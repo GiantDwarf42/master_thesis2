@@ -11,7 +11,7 @@ vario <- function(x) sqrt(sum(x^2))
 coord
                      
 
-res1  <- simu_specfcts(no.simu=10, coord=coord, 
+res1  <- simu_specfcts(no.simu=15, coord=coord, 
                        vario=vario)
 
 
@@ -29,7 +29,7 @@ res2
 
 
 simu_extrfcts <- function(coord, vario, 
-                loc=1, scale=1, shape=1, no.simu=1) {
+                loc=0, scale=1, shape=1, no.simu=1) {
                             
         
   
@@ -61,7 +61,8 @@ simu_extrfcts <- function(coord, vario,
         counter <- rep(0, times=no.simu)
    
         for (k in 1:N) {
-                poisson <- rexp(no.simu)
+                #poisson <- rexp(no.simu)
+                poisson <- rep(1, no.simu)
 
                 trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
                 
@@ -87,7 +88,8 @@ simu_extrfcts <- function(coord, vario,
                                 idx.upd <- idx[ind.upd]
                                 res[idx.upd,] <- pmax(res[idx.upd,], 1/poisson[idx.upd]*proc[ind.upd,])
                         }
-                        poisson[ind] <- poisson[ind] + rexp(n.ind)
+                        #poisson[ind] <- poisson[ind] + rexp(n.ind)
+                        poisson[ind] <- poisson[ind] + rep(1,n.ind)
                         } 
                 }
         res <- sapply(1:N, function(i) {
@@ -101,15 +103,6 @@ simu_extrfcts <- function(coord, vario,
         return(list(res=res, counter=counter))  
 }
 
-
-N <- nrow(coord)
-
-for (k in 1:N) {
-
-                trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
-                print(trend)
-                
-}
 
 
 
