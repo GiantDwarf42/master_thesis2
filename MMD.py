@@ -594,7 +594,7 @@ def sim_huesler_reis_ext(coord, Vario, device, loc=1., scale=1., shape=1., no_si
 			assert proc.shape == (n_ind, N), f"Shape of proc {proc.shape} does not match the expected dimensions {(n_ind, N)}"
 
 
-			if k == 1:
+			if k == 0:
 
 				ind_upd = torch.tensor(np.repeat(True, n_ind))
 			else:

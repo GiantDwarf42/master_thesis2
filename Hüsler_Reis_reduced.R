@@ -3,8 +3,8 @@ simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
   stopifnot(length(idx)==1 || length(idx)==no.simu)
   
   # random component
-  #res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
-  res <- t(chol.mat)%*%matrix(1, nrow = N, ncol = no.simu)
+  res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
+  #res <- t(chol.mat)%*%matrix(1, nrow = N, ncol = no.simu)
   
   if (!is.matrix(trend)) {
     res <- exp(t(res - trend))
@@ -113,8 +113,8 @@ simu_extrfcts <- function(coord, vario,
         counter <- rep(0, times=no.simu)
    
         for (k in 1:N) {
-                #poisson <- rexp(no.simu)
-                poisson <- rep(1, no.simu)
+                poisson <- rexp(no.simu)
+                #poisson <- rep(1, no.simu)
 
                 trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
                 
@@ -140,8 +140,8 @@ simu_extrfcts <- function(coord, vario,
                                 idx.upd <- idx[ind.upd]
                                 res[idx.upd,] <- pmax(res[idx.upd,], 1/poisson[idx.upd]*proc[ind.upd,])
                         }
-                        #poisson[ind] <- poisson[ind] + rexp(n.ind)
-                        poisson[ind] <- poisson[ind] + rep(1,n.ind)
+                        poisson[ind] <- poisson[ind] + rexp(n.ind)
+                        #poisson[ind] <- poisson[ind] + rep(1,n.ind)
                         } 
                 }
         res <- sapply(1:N, function(i) {
@@ -154,3 +154,4 @@ simu_extrfcts <- function(coord, vario,
    
         return(list(res=res, counter=counter))  
 }
+

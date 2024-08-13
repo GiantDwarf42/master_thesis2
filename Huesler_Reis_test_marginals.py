@@ -41,9 +41,9 @@ alpha = 1.
 p = 1.
 
 # create grids
-grid = MMD.create_centered_grid(3)
+grid = MMD.create_centered_grid(2)
 
-y_sample_size = 10000
+y_sample_size = 10
 #%%
 Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
 #%%
@@ -53,6 +53,56 @@ y = MMD.sim_huesler_reis_ext(grid, Vario_true_params, device, no_simu=y_sample_s
 
 y_df = pd.DataFrame(y)
 #%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Example DataFrame and column (replace this with your actual data)
 for col in range(y_df.shape[1]):
