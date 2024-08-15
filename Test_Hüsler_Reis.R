@@ -5,13 +5,23 @@
 #source("simu_Dombry_et_al.R")
 #source("Hüsler_Reis_reduced.R")
 
+
+
+
+# Load the 'evd' package
+library(evd)
+
+
 set.seed(42)
 ## simulate Brown-Resnick processes via the sprectral measure (corresponds to 
 ## the algorithm devised by Dieker and Mikosch, 2105) and extremal functions
-coord <- cbind(1:10, -5:4)
+# coord <- cbind(1:10, -5:4)
+# 
+# coord <- cbind(c(-1,-1,1,1), c(-1,1,-1,1))
+# coord <- cbind(1:10, -5:4)
 
-coord <- cbind(c(-1,-1,1,1), c(-1,1,-1,1))
-coord <- cbind(1:10, -5:4)
+coord <- cbind(c(0,0), c(0,1))
+coord
 vario <- function(x) 1 * sqrt(sum(x^2))^1
 coord
 
@@ -133,39 +143,62 @@ simu_extrfcts <- function(coord, vario,
   return(list(res=res, counter=counter))  
 }
 
+# for standard gumbell case => loc=0, scale=1 and shape=0
 
-
-res1  <- simu_extrfcts(no.simu=10000, coord=coord, 
-                       vario=vario, loc = 1)
+res1  <- simu_extrfcts(no.simu=1000000, coord=coord, 
+                       vario=vario, loc = 0, scale = 1, shape=0)
 res1 <- as.data.frame(res1$res)
 
 
 res1
 
-plot(density(res1$X1), xlim=c(-5,100))
 
-density(res1$X1)
 
+
+# Define a sequence of x values
+x <- seq(-10, 10, length = 10000)
+
+# Compute the density of the standard Gumbel distribution
+y <- dgumbel(x, loc = 0, scale = 1)
+
+# Plot the density
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = "Density of the Standard Gumbel Distribution",
+     xlab = "x", ylab = "Density")
 
 for (i in 1:ncol(res1)){
   
-  plot(density(as.matrix((1/res1[i]))),xlim=c(-5,10))
-  
+  plot(density(as.matrix((res1[i]))),xlim=c(-5,10), col="red")
+  lines(x, y, type = "l", lwd = 2, col = "blue",
+             main = "Density of the Standard Gumbel Distribution",
+             xlab = "x", ylab = "Density")
 }
 
-class(res1)
-
-res1$res
-
-(res1)
 
 
+# get sum of truth value for first variable
+u1 <- colSums(res1[1]<=1)
+u1
 
+p_u1 <- u1/nrow(res1)
+p_u1
 
+table(res1[1]<=1)
+# logical for both variables to be smaller 1
+u2_log <- rowSums(res1 <=1) == 2
+u2_log 
+table(u2_log)
 
+p_u2 <- sum(u2_log)/(nrow(res1))
+p_u2
 
+theta_sim <- log(p_u2)/log(p_u1)
+theta_sim
 
+vario(coord)
 
+theta_theory <- 2*pnorm(sqrt(vario(coord)/2))
+theta_theory
 
 
 

@@ -42,7 +42,44 @@ p = 1.
 # create grids
 grid = MMD.create_centered_grid(2)
 
-y_sample_size = 10
+grid = torch.Tensor([[0.,0.],
+             [0.,1.]])
+
+y_sample_size = 100000
+#%%
+Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
+#%%
+y = MMD.sim_huesler_reis_ext(grid, Vario_true_params, device, no_simu=y_sample_size, loc = 0., scale = 1., shape=0.)
+#%%
+y = pd.DataFrame(y)
+#%%
+y
+#%%
+normal_dist = torch.distributions.Normal(0, 1)
+
+#%%
+theta_theory = 2 * normal_dist.cdf(torch.sqrt(Vario_true_params.vario(torch.sum(grid))/2))
+theta_theory
+#%%
+u1 = (y[0]<=1).sum()
+u1
+
+p_u1 = u1/y.shape[0]
+p_u1
+
+#%%
+u2 = ((y[0] <= 1) & (y[1] <= 1)).sum()
+u2
+
+p_u2 = u2/y.shape[0]
+p_u2
+
+#%%
+theta_emp = np.log(p_u2)/np.log(p_u1)
+theta_emp
+#%%
+theta_theory
+#%%
 #%%
 Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
 #%%
@@ -54,7 +91,11 @@ y_df = pd.DataFrame(y)
 #%%
 y_df
 #%%
+
+t = torch.tensor([[2,0],
+             [3,1]])
 #%%
+Vario_true_params.vario(t)
 #%%
 #%%
 #%%
