@@ -1,5 +1,5 @@
 
-source("G:/My Drive/Studium/UNIGE_Master/Thesis/Master_Thesis/Code2/Hüsler_Reis_reduced.R")
+#source("G:/My Drive/Studium/UNIGE_Master/Thesis/Master_Thesis/Code2/Hüsler_Reis_reduced.R")
 #source("G:/My Drive/Studium/UNIGE_Master/Thesis/Master_Thesis/Code2/simu_Dombry_et_al.R")
 
 #source("simu_Dombry_et_al.R")
@@ -11,33 +11,153 @@ set.seed(42)
 coord <- cbind(1:10, -5:4)
 
 coord <- cbind(c(-1,-1,1,1), c(-1,1,-1,1))
+coord <- cbind(1:10, -5:4)
 vario <- function(x) 1 * sqrt(sum(x^2))^1
 coord
 
-          
 
-res1  <- simu_extrfcts(no.simu=10, coord=coord, 
+
+
+## internal functions: do not use any of them directly!
+simu_px_brownresnick <- function(no.simu=1, idx,  N, trend, chol.mat) {
+  stopifnot(length(idx)==1 || length(idx)==no.simu)
+  
+  
+  # random component
+  res <- t(chol.mat)%*%matrix(rnorm(N*no.simu), ncol=no.simu)
+  #res <- t(chol.mat)%*%matrix(1, nrow = N, ncol = no.simu)
+  
+  if (!is.matrix(trend)) {
+    res <- exp(t(res - trend))
+  } else {
+    res <- exp(t(res - trend[,idx]))   
+  }
+  norm_factor <- res[cbind(1:no.simu,idx)]
+  
+  result <- res/norm_factor
+  return(result)
+}
+
+## main functions
+
+simu_extrfcts <- function(coord, vario, 
+                          loc=1, scale=1, shape=1, no.simu=1) {
+  
+  #browser()
+  
+  stopifnot(!missing(coord))
+  if (!is.matrix(coord)) coord <- matrix(coord, ncol=1)   
+  N <- nrow(coord)
+  
+  
+  stopifnot((N==round(N)) & (N>=1))
+  stopifnot((no.simu==round(no.simu)) & (no.simu>=1))
+  
+  if (length(loc)  ==1) loc   <- rep(loc  , times=N)
+  if (length(scale)==1) scale <- rep(scale, times=N)
+  if (length(shape)==1) shape <- rep(shape, times=N)
+  stopifnot(all(scale>1e-12))
+  
+  
+  stopifnot(is.function(vario))
+  cov.mat <- sapply(1:N, function(i) sapply(1:N, function(j) 
+    vario(coord[i,]) + vario(coord[j,]) - vario(coord[i,]-coord[j,])))
+  cov.mat <- cov.mat + 1e-6
+  
+  
+  #add constant random effect to avoid numerical problems            
+  chol.mat <- chol(cov.mat)
+  
+  
+  res <- matrix(0, nrow=no.simu, ncol=N)
+  counter <- rep(0, times=no.simu)
+  
+  for (k in 1:N) {
+    poisson <- rexp(no.simu)
+    #poisson <- rep(1, no.simu)
+    
+    trend <- sapply(1:N, function(j) vario(coord[j,]-coord[k,]))
+    
+    
+    while (any(1/poisson > res[,k])) {
+      ind <- (1/poisson > res[,k])
+      n.ind <- sum(ind)
+      idx <- (1:no.simu)[ind]
+      counter[ind] <- counter[ind] + 1
+      
+      proc <- simu_px_brownresnick(no.simu=n.ind, idx=k, N=N, trend=trend, chol.mat=chol.mat)
+      
+      stopifnot(dim(proc)==c(n.ind, N))
+      
+      
+      if (k==1) {
+        ind.upd <- rep(TRUE, times=n.ind)
+      } else {
+        ind.upd <- sapply(1:n.ind, function(i) 
+          all(1/poisson[idx[i]]*proc[i,1:(k-1)] <= res[idx[i],1:(k-1)]))
+        #test <- sapply(1:n.ind, function(i) proc[i,1:(k-1)]) 
+      }
+      if (any(ind.upd)) {
+        idx.upd <- idx[ind.upd]
+        res[idx.upd,] <- pmax(res[idx.upd,], 1/poisson[idx.upd]*proc[ind.upd,])
+      }
+      poisson[ind] <- poisson[ind] + rexp(n.ind)
+      #poisson[ind] <- poisson[ind] + rep(1,n.ind)
+    } 
+  }
+  
+  test <- sapply (1:N, function(i) {
+    if (abs(shape[i]<1e-12)) {   
+      log(res[,i])*scale[i] + loc[i]}})
+  
+  for (i in 1:N){
+    
+  
+    i_test <- i
+    shape_i <- shape[i]
+    log_res_i <- log(res[,i])
+    
+    sahep_i <- scale[i]
+    loc_i <- loc[i]
+  }
+  
+   
+  res <- sapply(1:N, function(i) {
+    if (abs(shape[i]<1e-12)) {   
+      return(log(res[,i])*scale[i] + loc[i])
+    } else {
+      return(1/shape[i]*(res[,i]^shape[i]-1)*scale[i] + loc[i])
+    }
+  })   
+  
+  return(list(res=res, counter=counter))  
+}
+
+
+
+res1  <- simu_extrfcts(no.simu=10000, coord=coord, 
                        vario=vario, loc = 1)
-res1 <- data.frame(res1$res)
+res1 <- as.data.frame(res1$res)
 
 
+res1
+
+plot(density(res1$X1), xlim=c(-5,100))
+
+density(res1$X1)
 
 
+for (i in 1:ncol(res1)){
+  
+  plot(density(as.matrix((1/res1[i]))),xlim=c(-5,10))
+  
+}
 
+class(res1)
 
+res1$res
 
-
-
-
-
-
-
-
-res2 <- simu_extrfcts(model="brownresnick", no.simu = 10, coord = coord, vario = vario)
-res2
-
-
-
+(res1)
 
 
 

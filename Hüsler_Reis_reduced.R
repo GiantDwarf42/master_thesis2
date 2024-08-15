@@ -83,7 +83,7 @@ simu_specfcts <- function(loc=0, scale=1, shape=1, no.simu=1,
 simu_extrfcts <- function(coord, vario, 
                 loc=1, scale=1, shape=1, no.simu=1) {
                             
-        
+        browser()
   
         stopifnot(!missing(coord))
         if (!is.matrix(coord)) coord <- matrix(coord, ncol=1)   
