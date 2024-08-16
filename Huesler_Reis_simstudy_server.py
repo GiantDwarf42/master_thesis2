@@ -43,7 +43,18 @@ def main(task_id):
     # setup parameter permutations
 
     # create grids
-    grids = [MMD.create_centered_grid(3), MMD.create_centered_grid(5), MMD.create_centered_grid(10)]
+    #grids = [MMD.create_centered_grid(3), MMD.create_centered_grid(5), MMD.create_centered_grid(10)]
+
+    grids = [{"grid": torch.tensor([[0.,-1],
+              [0.5,-0.5],
+              [1.,0.]]),
+    "name": "lr"},
+    {"grid": torch.tensor([[1.,0.],
+              [0.5,0.5],
+              [0.,1.]]),
+    "name": "ur"},
+    {"grid":MMD.create_centered_grid(2),
+     "name": "2x2"}]
 
 
     # #sample sizes
@@ -78,16 +89,17 @@ def main(task_id):
                         
                             if x_sample_size >= y_sample_size:
 
-                                
-                                grid_size = np.sqrt(grid.shape[0])
+                                grid_name = grid["name"]
+                                grid_content = grid["grid"]
+                                #grid_size = np.sqrt(grid.shape[0])
 
-                                file_name = f"grid{grid_size}_alpha{alpha}_p{p}_xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
+                                file_name = f"grid{grid_name}_alpha{alpha}_p{p}_xsize{x_sample_size}_ysize{y_sample_size}_ID{task_id}"
 
                                 # setup variogram
                                 Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
 
                                 #sample the response
-                                y = MMD.sim_huesler_reis_ext(grid, Vario_true_params, device, no_simu=y_sample_size)
+                                y = MMD.sim_huesler_reis_ext(grid_content, Vario_true_params, device, no_simu=y_sample_size)
 
 
                                 
@@ -96,7 +108,7 @@ def main(task_id):
 
                                 # setting up initial b_params 
                                     b_params = {"Vario": Vario_true_params,
-                                                "grid": grid}
+                                                "grid": grid_content}
 
                                 # b heuristic could also just be a value
                                     b = MMD.calc_b_heuristic(y, x_sample_size, "huesler_reis", device, b_params).item()
@@ -125,7 +137,7 @@ def main(task_id):
 
                                     
 
-                                    simulated_df = MMD.training_loop_huesler_reis(Vario, y, grid, nr_iterations , x_sample_size, device, b, optimizer, epoch_print_size=False, b_update=b_update)
+                                    simulated_df = MMD.training_loop_huesler_reis(Vario, y, grid_content, nr_iterations , x_sample_size, device, b, optimizer, epoch_print_size=False, b_update=b_update)
 
 
                                     

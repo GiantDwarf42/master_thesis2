@@ -42,6 +42,34 @@ p = 1.
 # create grids
 grid = MMD.create_centered_grid(2)
 
+#%%
+torch.tensor([[0.,-1],
+              [0.5,-0.5],
+              [1.,0.]])
+
+#%%
+torch.tensor([[1.,0.],
+              [0.5,0.5],
+              [0.,1.]])
+
+#%%
+t = [{"grid": torch.tensor([[0.,-1],
+              [0.5,-0.5],
+              [1.,0.]]),
+    "name": "lr"},
+    {"grid": torch.tensor([[1.,0.],
+              [0.5,0.5],
+              [0.,1.]]),
+    "name": "ur"},
+    {"grid":MMD.create_centered_grid(2),
+     "name": "2x2"}]
+
+#%%
+t[0]["name"]
+#%%
+
+
+#%%
 grid = torch.Tensor([[0.,0.],
              [0.,1.]])
 
@@ -147,6 +175,19 @@ p = 1.
 grid = MMD.create_centered_grid(3)
 
 y_sample_size = 10000
+#%%
+
+
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
 #%%
 Vario_true_params = MMD.Vario(torch.tensor([alpha]),torch.tensor([p]))
 #%%
