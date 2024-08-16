@@ -423,7 +423,7 @@ def simu_px_brownresnick(no_simu, idx, N, trend, chol_mat):
     
     return result
 
-def sim_huesler_reiss(coord, Vario, device, loc=1., scale=1., shape=1., no_simu=1.):
+def sim_huesler_reiss(coord, Vario, device, loc=0., scale=1., shape=0., no_simu=1.):
 
     N = coord.shape[0]
 
