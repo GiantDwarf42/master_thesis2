@@ -70,8 +70,10 @@ t[0]["name"]
 
 
 #%%
-grid = torch.Tensor([[0.,0.],
-             [0.,1.]])
+grid = torch.Tensor([[1.,0.],
+             [0.,0.],
+             [0.,1.],
+             [0.5,0.]])
 
 y_sample_size = 100000
 #%%
@@ -88,6 +90,13 @@ normal_dist = torch.distributions.Normal(0, 1)
 #%%
 theta_theory = 2 * normal_dist.cdf(torch.sqrt(Vario_true_params.vario(torch.sum(grid))/2))
 theta_theory
+
+#%%
+theta_theory = 2 * normal_dist.cdf(torch.sqrt(torch.sum(Vario_true_params.vario(grid))/2))
+theta_theory
+#%%
+
+torch.sum(Vario_true_params.vario(grid))
 #%%
 u1 = (y[0]<=1).sum()
 u1
