@@ -3,6 +3,7 @@
 import sys
 
 
+
 #%%
 import torch
 import numpy as np
@@ -88,11 +89,13 @@ y
 normal_dist = torch.distributions.Normal(0, 1)
 
 #%%
+Vario_true_params.vario(grid)
+#%%
 theta_theory = 2 * normal_dist.cdf(torch.sqrt(Vario_true_params.vario(torch.sum(grid))/2))
 theta_theory
 
 #%%
-theta_theory = 2 * normal_dist.cdf(torch.sqrt(torch.sum(Vario_true_params.vario(grid))/2))
+theta_theory = 2 * normal_dist.cdf(torch.sqrt(torch.sqrt(torch.tensor(2))/2))
 theta_theory
 #%%
 
@@ -105,7 +108,7 @@ p_u1 = u1/y.shape[0]
 p_u1
 
 #%%
-u2 = ((y[0] <= 1) & (y[1] <= 1)).sum()
+u2 = ((y[0] <= 1) & (y[2] <= 1)).sum()
 u2
 
 p_u2 = u2/y.shape[0]
