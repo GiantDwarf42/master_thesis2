@@ -18,7 +18,7 @@ from collections import defaultdict
 
 # %%
 # Step 1: Specify the directory containing the CSV files
-directory = r'/home/users/k/kipfer2/Logistic_output'
+directory = r'/home/users/k/kipfer2/Logistic_output_sgd'
 
 
 # %%
@@ -106,7 +106,7 @@ stacked_dataframes.info()
 # %%
 # 5 step: safe the processed DataFrame
 file_name = f"Logistic_Processed_data"
-saving_path = r"/home/users/k/kipfer2/Logistic_processed_results/Data"
+saving_path = r"/home/users/k/kipfer2/Logistic_processed_results_sgd/Data"
 
 
 stacked_dataframes.to_csv(f"{saving_path}\{file_name}.csv")

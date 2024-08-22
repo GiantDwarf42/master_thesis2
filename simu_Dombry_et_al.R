@@ -59,6 +59,7 @@ simu_px_dirichlet <- function(no.simu, idx, N, weights, alpha, norm.alpha) {
 
 simu_extrfcts <- function(model, N, loc=1, scale=1, shape=1, no.simu=1, 
                           coord, vario, corr, dof, theta, weights, alpha) {
+
                             
   stopifnot(model %in% c("brownresnick", "extremalt", "logistic", "neglogistic", "dirichlet"))
   

@@ -35,8 +35,8 @@ def main(task_id):
 
 
     #%%
-    folder_name= "Huesler_Reis_output"
-    lr = 0.01
+    folder_name= "Huesler_Reiss_output_p"
+    lr = 0.1
 
     #%%
     #######################################################################################################################3
@@ -45,26 +45,19 @@ def main(task_id):
     # create grids
     #grids = [MMD.create_centered_grid(3), MMD.create_centered_grid(5), MMD.create_centered_grid(10)]
 
-    grids = [{"grid": torch.tensor([[0.,-1],
-              [0.5,-0.5],
-              [1.,0.]]),
-    "name": "lr"},
-    {"grid": torch.tensor([[1.,0.],
-              [0.5,0.5],
-              [0.,1.]]),
-    "name": "ur"},
+    grids = [
     {"grid":MMD.create_centered_grid(2),
      "name": "2x2"}]
 
 
     # #sample sizes
-    x_sample_sizes = [50,100,200,500,1000]
-    y_sample_sizes = [50,100,200,500,1000]
+    x_sample_sizes = [1000]
+    y_sample_sizes = [1000]
 
 
     # true parameters
 
-    alpha_list = [2., 5., 10.]
+    alpha_list = [1.]
     p_list = [0.5, 1., 1.5, 2]
 
     # bandwidth
@@ -126,11 +119,11 @@ def main(task_id):
                                     
 
                                     #setup the parameters to optimize
-                                    alpha_hat = torch.tensor([1.]).to(device).requires_grad_()
+                                    alpha_hat = torch.tensor([1.]).to(device)
                                     p_hat = torch.tensor([1.]).to(device).requires_grad_()
                             
                                     # setup optimizer
-                                    optimizer = torch.optim.Adam([alpha_hat, p_hat], lr=lr)
+                                    optimizer = torch.optim.Adam([p_hat], lr=lr)
                                     
                                     #setup Vario object to optimize
                                     Vario = MMD.Vario(alpha_hat,p_hat)

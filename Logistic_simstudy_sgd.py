@@ -30,7 +30,7 @@ def main(task_id):
     np.random.seed(seed)
 
     #%%
-    folder_name= "Logistic_output"
+    folder_name= "Logistic_output_sgd"
     lr = 0.01
 
 
@@ -42,13 +42,13 @@ def main(task_id):
     y_sample_sizes = [50,100,200,500,1000]
 
     # true parameters
-    alpha_list = [0.1, 0.3, 0.7, 0.9]
+    alpha_list = [0.1, 0.7 ,0.9]
 
     #dims
-    dim_list = [1,2,5,10,20]
+    dim_list = [2,5,10,20]
 
     # bandwidth
-    b_list = ["AUTO", 0.01, 0.1]
+    b_list = ["AUTO"]
 
     # number number iterations
     nr_iterations = 2500
@@ -112,7 +112,7 @@ def main(task_id):
                             alpha_hat = torch.tensor([0.5]).to(device).requires_grad_()
                             
                             # setup optimizer
-                            optimizer = torch.optim.Adam([alpha_hat], lr=lr)
+                            optimizer = torch.optim.SGD([alpha_hat], lr=lr)
 
                             
                             # run the actual simulation

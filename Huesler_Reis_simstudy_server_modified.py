@@ -35,8 +35,8 @@ def main(task_id):
 
 
     #%%
-    folder_name= "Huesler_Reis_output"
-    lr = 0.01
+    folder_name= "Huesler_Reiss_output"
+    lr = 0.1
 
     #%%
     #######################################################################################################################3
@@ -58,8 +58,8 @@ def main(task_id):
 
 
     # #sample sizes
-    x_sample_sizes = [50,100,200,500,1000]
-    y_sample_sizes = [50,100,200,500,1000]
+    x_sample_sizes = [1000]
+    y_sample_sizes = [1000]
 
 
     # true parameters

@@ -1,0 +1,46 @@
+#!/bin/sh
+#SBATCH --job-name Testrun1            # this is a parameter to help you sort your job when listing it
+#SBATCH --error protocols/testrun-error.e%j     # optional. By default a file slurm-{jobid}.out will be created
+#SBATCH --output protocols/testrun-out.o%j      # optional. By default the error and output files are merged
+#SBATCH --ntasks 1                    # number of tasks in your job. One by default
+#SBATCH --cpus-per-task 1             # number of cpus for each task. One by default
+
+#SBATCH --partition shared-gpu 	# the partition to use. By default debug-cpu		
+    				#--gpus=1 #--gpus=titan:3 stuff that the webpage says the gpu requires
+#SBATCH --gpus=1
+#SBATCH --mem=2000                      #memory needed (default 3GB)
+#SBATCH --time 1:00                  # maximum run time.
+
+
+module purge                           #Unload all modules
+
+
+module load Anaconda3              # load Anaconda
+
+conda env list
+# no clue why this is necessary. it took me days to figure this out.....
+conda deactivate
+conda deactivate
+
+conda env list
+## define and create a unique scratch directory
+#SCRATCH_DIRECTORY=/global/work/${USER}/kelp/${SLURM_JOBID}
+#mkdir -p ${SCRATCH_DIRECTORY}
+#cd ${SCRATCH_DIRECTORY}
+
+echo "before calling source: $PATH"
+echo "Home: $HOME"
+
+
+
+
+# Activate Anaconda work environment
+# source $HOME/.bashrc
+source activate mt1 # conda activate mt1 does not work (this activates the conda environment)
+
+echo "after calling source: $PATH"
+
+
+srun Gaussian_univariate_case_simstudy.py                     # run your software
+
+echo "executed"
