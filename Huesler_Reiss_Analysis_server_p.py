@@ -13,7 +13,7 @@ pd.options.display.max_rows = 500
 
 
 # %%
-load_path = r"/home/users/k/kipfer2/Husler_Reiss_processed_results_gumbel/Data/Huesler_Reiss_Processed_data_gumbel_300.pkl"
+load_path = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_p/Data/Huesler_Reiss_Processed_data_p.pkl"
 
 #loading the data
 
@@ -83,13 +83,13 @@ df_last_150_proper_aggregation_index_reset.head()
 
 # %%
 # %%
-saving_path_result_data = f"/home/users/k/kipfer2/Husler_Reiss_processed_results_gumbel/processed_tables"
+saving_path_result_data = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_p/processed_tables"
 
 # %%
 
 data_output = df_last_150_proper_aggregation_index_reset
-data_output.to_pickle(f"{saving_path_result_data}/Huesler_Reiss_result_gumbel_300.pkl")
-data_output.to_csv(f"{saving_path_result_data}/Huesler_Reiss_result_gumbel_300.csv")
+data_output.to_pickle(f"{saving_path_result_data}/Huesler_Reiss_result_p.pkl")
+data_output.to_csv(f"{saving_path_result_data}/Huesler_Reiss_result_p.csv")
 
 # %% [markdown]
 # # Convergence plots b0.01 case
@@ -112,7 +112,7 @@ param_combinations = df.groupby(["grid", "alpha", "p", "xsize", "ysize"]).groups
 param_combinations
 
 # %%
-saving_path_convergence = r"/home/users/k/kipfer2/Husler_Reiss_processed_results_gumbel/convergence_charts"
+saving_path_convergence = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_p/convergence_charts"
 
 # %% [markdown]
 # # Convergence Charts
@@ -168,7 +168,7 @@ for grid, alpha, p, xsize, ysize in param_combinations:
 # # Violin Charts
 
 # %%
-saving_path_sample_size_effect = r"/home/users/k/kipfer2/Husler_Reiss_processed_results_gumbel/violin_charts"
+saving_path_sample_size_effect = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_p/violin_charts"
 
 # %%
 df_last_150_aggregated_index_reset = df_last_150_aggregated.reset_index()

@@ -21,6 +21,7 @@ set.seed(42)
 # coord <- cbind(1:10, -5:4)
 
 coord <- cbind(c(1,0,0,0.5), c(0,0,1,0))
+
 coord
 vario <- function(x) 1 * sqrt(sum(x^2))^1
 coord
@@ -185,7 +186,7 @@ p_u1
 
 table(res1[1]<=1)
 # logical for both variables to be smaller 1
-u2_log <- rowSums(res1[1:2] <=1) == 2
+u2_log <- rowSums(res1[c(1,4)] <=1) == 2
 u2_log 
 table(u2_log)
 
@@ -201,13 +202,13 @@ theta_theory <- 2*pnorm(sqrt(vario(coord)/2))
 
 t <- sapply(1:nrow(coord), function(x){ vario(coord[x,])})
 t
-theta_theory <- 2*pnorm(sqrt(sum(t)/2))
+theta_theory <- 2*pnorm(sqrt(sum(0.5)/2))
 
 theta_theory
 
 
 theta_sim
-
+coord
 
 
 

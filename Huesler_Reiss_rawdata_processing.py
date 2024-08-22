@@ -19,7 +19,7 @@ from collections import defaultdict
 # %%
 # Step 1: Specify the directory containing the CSV files
 #directory = r'/home/users/k/kipfer2/Huesler_Reis_test_duration'
-directory = r"/home/users/k/kipfer2/Huesler_Reis_output_300min_timeout"
+directory = r"/home/users/k/kipfer2/Huesler_Reiss_output"
 
 # %%
 
@@ -58,9 +58,9 @@ for key, files in file_groups.items():
         parts = file.split('_')
         
         components = {
-            'grid': np.repeat(float(parts[0][4:]), df.shape[0]),
+            'grid': np.repeat(parts[0][4:], df.shape[0]),
             'alpha':np.repeat(float(parts[1][5:]),df.shape[0]),
-            'p': np.repeat(parts[2],df.shape[0]),
+            'p': np.repeat(float(parts[2][1:]),df.shape[0]),
             'xsize': np.repeat(int(parts[3][5:]),df.shape[0]),
             'ysize': np.repeat(int(parts[4][5:]),df.shape[0]),
             'ID': np.repeat(int(parts[5].split('.')[0][2:]),df.shape[0])  # Remove the .csv part
@@ -107,8 +107,8 @@ stacked_dataframes.info()
 
 # %%
 # 5 step: safe the processed DataFrame
-file_name = f"Huesler_Reiss_Processed_data_timeout"
-saving_path = r"/home/users/k/kipfer2/Huesler_Reiss_processed_results_test"
+file_name = f"Huesler_Reiss_Processed_data_gumbel_300"
+saving_path = r"/home/users/k/kipfer2/Husler_Reiss_processed_results_gumbel/Data"
 
 stacked_dataframes.to_csv(f"{saving_path}/{file_name}.csv")
 
